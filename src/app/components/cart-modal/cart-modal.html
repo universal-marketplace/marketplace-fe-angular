@@ -1,0 +1,97 @@
+
+@if (state.isCartModalOpen()) {
+  <!-- Backdrop -->
+  <div
+    class="fixed inset-0 z-[100] bg-zinc-900/50 backdrop-blur-sm transition-opacity"
+    (click)="state.closeCartModal()"
+  ></div>
+
+  <!-- Sliding Panel -->
+  <div
+    class="fixed z-[110] bg-white dark:bg-zinc-800 shadow-2xl flex flex-col
+               bottom-0 left-0 right-0 h-[80vh] rounded-t-3xl animate-slide-in-bottom
+               md:top-0 md:bottom-0 md:right-0 md:left-auto md:w-[400px] md:h-full md:rounded-none md:animate-slide-in-right"
+  >
+    <!-- Header -->
+    <div class="flex items-center justify-between p-4 border-b border-zinc-100 dark:border-zinc-700">
+      <h2 class="text-lg font-bold text-zinc-900 dark:text-white flex items-center">
+        <mat-icon class="mr-2 text-orange-500">shopping_cart</mat-icon>
+        Twój koszyk
+      </h2>
+      <button
+        (click)="state.closeCartModal()"
+        class="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-500 dark:text-zinc-400 transition-colors"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <!-- Content -->
+    <div class="flex-1 overflow-y-auto p-4">
+      @if (state.cart().length === 0) {
+        <div class="flex flex-col items-center justify-center h-full text-center text-zinc-500 dark:text-zinc-400">
+          <mat-icon class="mb-4 text-zinc-300 dark:text-zinc-600" style="font-size: 64px; height: 64px; width: 64px;">remove_shopping_cart</mat-icon>
+          <p class="text-lg font-medium text-zinc-900 dark:text-white mb-1">Twój koszyk jest pusty</p>
+          <p class="text-sm">Dodaj ogłoszenia, aby móc je kupić.</p>
+          <button
+            (click)="state.closeCartModal()"
+            class="mt-6 px-4 py-2 bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400 font-medium rounded-xl hover:bg-orange-100 dark:hover:bg-orange-900/40 transition-colors"
+          >
+            Przeglądaj ogłoszenia
+          </button>
+        </div>
+      } @else {
+        <div class="space-y-4">
+          @for (item of state.cart(); track item.id) {
+            <div class="flex items-start p-3 bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl border border-zinc-100 dark:border-zinc-700">
+              <img
+                [src]="item.imageUrl"
+                [alt]="item.title"
+                class="w-20 h-20 object-cover rounded-xl flex-shrink-0"
+                referrerpolicy="no-referrer"
+              >
+              <div class="ml-3 flex-1 min-w-0">
+                <h4 class="text-sm font-semibold text-zinc-900 dark:text-white line-clamp-2 mb-1">{{ item.title }}</h4>
+                <div class="text-sm font-bold text-orange-500 mb-2">{{ item.price }}</div>
+                <button
+                  (click)="state.removeFromCart(item.id)"
+                  class="text-xs text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 font-medium flex items-center transition-colors"
+                >
+                  <mat-icon style="font-size: 14px; height: 14px; width: 14px; margin-right: 2px;">delete</mat-icon>
+                  Usuń
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Footer / Checkout -->
+    @if (state.cart().length > 0) {
+      <div class="p-4 border-t border-zinc-100 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50">
+        <div class="flex justify-between items-center mb-4">
+          <span class="text-zinc-600 dark:text-zinc-400 font-medium">Ilość przedmiotów:</span>
+          <span class="text-lg font-bold text-zinc-900 dark:text-white">{{ state.cart().length }}</span>
+        </div>
+        <button
+          (click)="buyItems()"
+          class="w-full flex items-center justify-center px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-xl shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+        >
+          <mat-icon class="mr-2">payment</mat-icon>
+          Kup teraz
+        </button>
+      </div>
+    }
+  </div>
+
+  <!-- Success Toast -->
+  @if (showSuccessToast()) {
+    <div class="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-[120] animate-slide-in-bottom">
+      <div class="flex items-center px-4 py-3 bg-emerald-500 text-white rounded-2xl shadow-lg">
+        <mat-icon class="mr-2">check_circle</mat-icon>
+        <span class="font-medium">Zakup zakończony sukcesem!</span>
+      </div>
+    </div>
+  }
+}

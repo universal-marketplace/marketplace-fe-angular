@@ -1,0 +1,126 @@
+<nav class="sticky top-0 z-50 w-full border-b border-orange-200 dark:border-orange-900 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md transition-colors duration-300">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between h-16 items-center">
+
+      <!-- Logo -->
+      <div class="flex-shrink-0 flex items-center cursor-pointer" routerLink="/">
+        <mat-icon class="text-orange-500 mr-2" style="font-size: 32px; height: 32px; width: 32px;">storefront</mat-icon>
+        <span class="font-sans font-bold text-xl tracking-tight text-zinc-900 dark:text-white">UniMarket</span>
+      </div>
+
+      <!-- Search (Desktop) -->
+      <div class="hidden md:flex flex-1 max-w-md mx-8">
+        <div class="relative w-full">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <mat-icon class="text-zinc-400">search</mat-icon>
+          </div>
+          <input
+            type="text"
+            class="block w-full pl-10 pr-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl leading-5 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 sm:text-sm transition-colors"
+            placeholder="Szukaj usług, przedmiotów, tagów..."
+            (input)="onSearch($event)"
+          >
+        </div>
+      </div>
+
+      <!-- Right side actions -->
+      <div class="flex items-center space-x-2 sm:space-x-4">
+
+        <!-- Theme Toggle -->
+        <button
+          (click)="state.toggleTheme()"
+          class="p-2 rounded-full text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:outline-none transition-colors"
+          aria-label="Toggle theme"
+        >
+          <mat-icon>{{ state.isDarkMode() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+        </button>
+
+        <!-- Auth / Profile -->
+        @if (state.currentUser()) {
+          <div class="relative flex items-center space-x-4">
+
+            <!-- Cart Icon (Users Only) -->
+            @if (state.currentUser()?.role === 'user') {
+              <button
+                (click)="state.openCartModal()"
+                class="relative p-2 rounded-full text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:outline-none transition-colors"
+                aria-label="Koszyk"
+              >
+                <mat-icon>shopping_cart</mat-icon>
+                @if (state.cart().length > 0) {
+                  <span class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-orange-500 rounded-full">
+                        {{ state.cart().length }}
+                      </span>
+                }
+              </button>
+            }
+
+            <div
+              class="flex items-center space-x-3 cursor-pointer group"
+              (click)="toggleDropdown()"
+            >
+              <div class="hidden sm:block text-right">
+                <div class="text-sm font-medium text-zinc-900 dark:text-white">{{ state.currentUser()?.name }}</div>
+                <div class="text-xs text-orange-500 font-medium">{{ state.currentUser()?.role === 'advertiser' ? 'Ogłoszeniodawca' : 'Użytkownik' }}</div>
+              </div>
+              <img
+                class="h-10 w-10 rounded-full object-cover border-2 border-transparent group-hover:border-orange-500 transition-colors"
+                [src]="state.currentUser()?.avatarUrl"
+                alt="User avatar"
+                referrerpolicy="no-referrer"
+              >
+            </div>
+
+            <!-- Dropdown Menu -->
+            @if (isDropdownOpen) {
+              <div
+                class="absolute right-0 top-12 mt-2 w-48 bg-white dark:bg-zinc-800 rounded-xl shadow-lg border border-zinc-100 dark:border-zinc-700 py-1 z-50 animate-slide-in-bottom"
+                style="animation-duration: 0.2s;"
+              >
+                <a
+                  [routerLink]="['/profile', state.currentUser()?.id]"
+                  (click)="isDropdownOpen = false"
+                  class="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
+                >
+                  Mój profil
+                </a>
+                <button
+                  (click)="openSettings()"
+                  class="w-full text-left block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
+                >
+                  Ustawienia konta
+                </button>
+                <div class="border-t border-zinc-100 dark:border-zinc-700 my-1"></div>
+                <button
+                  (click)="switchAccount()"
+                  class="w-full text-left block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
+                >
+                  Zmień konto
+                </button>
+                <button
+                  (click)="logout()"
+                  class="w-full text-left block px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                >
+                  Wyloguj się
+                </button>
+              </div>
+
+              <!-- Dropdown Backdrop -->
+              <div
+                class="fixed inset-0 z-40"
+                (click)="isDropdownOpen = false"
+              ></div>
+            }
+          </div>
+        } @else {
+          <button
+            (click)="state.openAuthModal()"
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl shadow-sm text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors"
+          >
+            Zaloguj się
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+</nav>

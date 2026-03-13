@@ -1,0 +1,68 @@
+
+<div
+  class="group bg-white dark:bg-zinc-800 rounded-2xl shadow-sm hover:shadow-md border border-zinc-100 dark:border-zinc-700 overflow-hidden transition-all duration-300 flex h-full cursor-pointer"
+  [ngClass]="viewMode === 'list' ? 'flex-col sm:flex-row' : 'flex-col max-sm:aspect-square'"
+  (click)="openDetails()"
+>
+  <!-- Image Container -->
+  <div
+    class="relative overflow-hidden bg-zinc-100 dark:bg-zinc-900 flex-shrink-0"
+    [ngClass]="viewMode === 'list' ? 'h-48 sm:h-auto w-full sm:w-48' : 'max-sm:hidden h-48 w-full'"
+  >
+    <img
+      [src]="listing.imageUrl"
+      [alt]="listing.title"
+      class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
+      referrerpolicy="no-referrer"
+    >
+    <div class="absolute top-2 right-2 sm:top-3 sm:right-3 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-lg flex items-center shadow-sm">
+      <mat-icon class="text-orange-500 text-sm mr-1" style="font-size: 14px; height: 14px; width: 14px;">star</mat-icon>
+      <span class="text-[10px] sm:text-xs font-bold text-zinc-900 dark:text-white">{{ listing.rating | number:'1.1-1' }}</span>
+      <span class="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 ml-1 hidden sm:inline">({{ listing.reviewCount }})</span>
+    </div>
+  </div>
+
+  <!-- Content Container -->
+  <div class="p-4 sm:p-5 flex flex-col flex-grow">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-2 gap-2 sm:gap-4">
+      <h3 class="text-base sm:text-lg font-semibold text-zinc-900 dark:text-white line-clamp-3 sm:line-clamp-2 leading-tight group-hover:text-orange-500 transition-colors min-w-0 flex-1">
+        {{ listing.title }}
+      </h3>
+      <div class="text-base sm:text-lg font-bold text-orange-500 whitespace-nowrap flex-shrink-0">
+        {{ listing.price }}
+      </div>
+    </div>
+
+    <!-- Advertiser Info -->
+    <div class="flex items-center mb-3 cursor-pointer min-w-0" [routerLink]="['/profile', listing.advertiserId]" (click)="$event.stopPropagation()">
+      <img
+        [src]="listing.advertiserAvatar"
+        [alt]="listing.advertiserName"
+        class="w-6 h-6 rounded-full mr-2 border border-zinc-200 dark:border-zinc-600 flex-shrink-0"
+        referrerpolicy="no-referrer"
+      >
+      <span class="text-sm text-zinc-600 dark:text-zinc-300 hover:text-orange-500 transition-colors truncate">{{ listing.advertiserName }}</span>
+    </div>
+
+    <!-- Description -->
+    <p class="text-sm text-zinc-500 dark:text-zinc-400 line-clamp-4 sm:line-clamp-2 mb-4 flex-grow">
+      {{ listing.description }}
+    </p>
+
+    <!-- Tags -->
+    <div class="flex flex-wrap gap-2 mt-auto">
+      @for (tag of listing.tags.slice(0, 3); track tag) {
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300 border border-orange-200 dark:border-orange-800/50">
+              {{ tag }}
+            </span>
+      }
+      @if (listing.tags.length > 3) {
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
+              +{{ listing.tags.length - 3 }}
+            </span>
+      }
+    </div>
+  </div>
+</div>

@@ -1,0 +1,99 @@
+@if (state.selectedListing()) {
+  <!-- Backdrop -->
+  <div
+    class="fixed inset-0 z-[100] bg-zinc-900/50 backdrop-blur-sm transition-opacity"
+    (click)="state.closeListingDetails()"
+  ></div>
+
+  <!-- Sliding Panel -->
+  <div
+    class="fixed z-[110] bg-white dark:bg-zinc-800 shadow-2xl flex flex-col
+               bottom-0 left-0 right-0 h-[60vh] rounded-t-3xl animate-slide-in-bottom
+               md:top-0 md:bottom-0 md:right-0 md:left-auto md:w-1/3 md:h-full md:rounded-none md:animate-slide-in-right"
+  >
+    <!-- Header -->
+    <div class="flex items-center justify-between p-4 border-b border-zinc-100 dark:border-zinc-700">
+      <h2 class="text-lg font-bold text-zinc-900 dark:text-white truncate pr-4">Szczegóły ogłoszenia</h2>
+      <button
+        (click)="state.closeListingDetails()"
+        class="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-500 dark:text-zinc-400 transition-colors"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <!-- Content -->
+    <div class="flex-1 overflow-y-auto p-4 sm:p-6">
+      <img
+        [src]="state.selectedListing()?.imageUrl"
+        [alt]="state.selectedListing()?.title"
+        class="w-full h-48 sm:h-64 object-cover rounded-2xl mb-6"
+        referrerpolicy="no-referrer"
+      >
+
+      <div class="flex flex-wrap gap-2 mb-4">
+        @for (tag of state.selectedListing()?.tags; track tag) {
+          <span class="px-3 py-1 bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-full text-xs font-medium">
+                {{ tag }}
+              </span>
+        }
+      </div>
+
+      <h1 class="text-2xl font-bold text-zinc-900 dark:text-white mb-2">
+        {{ state.selectedListing()?.title }}
+      </h1>
+
+      <div class="flex items-center justify-between mb-6">
+        <div class="text-2xl font-bold text-orange-500">
+          {{ state.selectedListing()?.price }}
+        </div>
+
+        @if (state.currentUser()?.role === 'user') {
+          <button
+            (click)="addToCart()"
+            class="inline-flex items-center px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-xl shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+          >
+            <mat-icon class="mr-2" style="font-size: 20px; height: 20px; width: 20px;">add_shopping_cart</mat-icon>
+            Do koszyka
+          </button>
+        }
+      </div>
+
+      <div class="prose prose-zinc dark:prose-invert max-w-none mb-8">
+        <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-2">Opis</h3>
+        <p class="text-zinc-600 dark:text-zinc-300 whitespace-pre-line">
+          {{ state.selectedListing()?.description }}
+        </p>
+      </div>
+
+      <!-- Advertiser Info -->
+      <div class="bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl p-4 border border-zinc-100 dark:border-zinc-700">
+        <h3 class="text-sm font-semibold text-zinc-900 dark:text-white mb-3 uppercase tracking-wider">Ogłoszeniodawca</h3>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-center space-x-3">
+            <img
+              [src]="state.selectedListing()?.advertiserAvatar"
+              [alt]="state.selectedListing()?.advertiserName"
+              class="w-12 h-12 rounded-full object-cover"
+              referrerpolicy="no-referrer"
+            >
+            <div>
+              <div class="font-medium text-zinc-900 dark:text-white">{{ state.selectedListing()?.advertiserName }}</div>
+              <div class="flex items-center text-sm text-zinc-500 dark:text-zinc-400">
+                <mat-icon class="text-orange-500 mr-1" style="font-size: 16px; height: 16px; width: 16px;">star</mat-icon>
+                {{ state.selectedListing()?.rating | number:'1.1-1' }} ({{ state.selectedListing()?.reviewCount }} opinii)
+              </div>
+            </div>
+          </div>
+          <button
+            [routerLink]="['/profile', state.selectedListing()?.advertiserId]"
+            (click)="state.closeListingDetails()"
+            class="w-full sm:w-auto px-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 text-sm font-medium rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors text-center"
+          >
+            Zobacz profil
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

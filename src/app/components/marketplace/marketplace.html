@@ -1,0 +1,114 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+  <!-- Header & Controls -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+    <div>
+      <h1 class="text-3xl font-bold text-zinc-900 dark:text-white mb-2">Znajdź to, czego szukasz</h1>
+      <p class="text-zinc-500 dark:text-zinc-400">Korepetycje, przeprowadzki i wiele więcej.</p>
+    </div>
+
+    <div class="flex items-center space-x-4 w-full md:w-auto">
+      <!-- View Toggle -->
+      <div class="flex bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl border border-zinc-200 dark:border-zinc-700">
+        <button
+          (click)="state.viewMode.set('grid')"
+          [class.bg-white]="state.viewMode() === 'grid'"
+          [class.dark:bg-zinc-700]="state.viewMode() === 'grid'"
+          [class.shadow-sm]="state.viewMode() === 'grid'"
+          [class.text-orange-500]="state.viewMode() === 'grid'"
+          [class.text-zinc-500]="state.viewMode() !== 'grid'"
+          class="p-2 rounded-lg transition-all"
+        >
+          <mat-icon>grid_view</mat-icon>
+        </button>
+        <button
+          (click)="state.viewMode.set('list')"
+          [class.bg-white]="state.viewMode() === 'list'"
+          [class.dark:bg-zinc-700]="state.viewMode() === 'list'"
+          [class.shadow-sm]="state.viewMode() === 'list'"
+          [class.text-orange-500]="state.viewMode() === 'list'"
+          [class.text-zinc-500]="state.viewMode() !== 'list'"
+          class="p-2 rounded-lg transition-all"
+        >
+          <mat-icon>view_list</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex flex-col lg:flex-row gap-8">
+
+    <!-- Sidebar / Filters -->
+    <aside class="w-full lg:w-64 flex-shrink-0">
+      <div class="bg-white dark:bg-zinc-800 rounded-2xl p-6 shadow-sm border border-zinc-100 dark:border-zinc-700 lg:sticky lg:top-24">
+        <h2 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4 flex items-center">
+          <mat-icon class="mr-2 text-orange-500">filter_list</mat-icon>
+          Filtry
+        </h2>
+
+        <!-- Tags Filter -->
+        <div class="mb-6">
+          <h3 class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3 uppercase tracking-wider">Popularne Tagi</h3>
+          <div class="flex flex-wrap gap-2">
+            @for (tag of state.availableTags(); track tag) {
+              <button
+                (click)="state.toggleTag(tag)"
+                [class.bg-orange-500]="state.selectedTags().includes(tag)"
+                [class.text-white]="state.selectedTags().includes(tag)"
+                [class.border-orange-500]="state.selectedTags().includes(tag)"
+                [class.bg-zinc-50]="!state.selectedTags().includes(tag)"
+                [class.dark:bg-zinc-900]="!state.selectedTags().includes(tag)"
+                [class.text-zinc-700]="!state.selectedTags().includes(tag)"
+                [class.dark:text-zinc-300]="!state.selectedTags().includes(tag)"
+                [class.border-zinc-200]="!state.selectedTags().includes(tag)"
+                [class.dark:border-zinc-700]="!state.selectedTags().includes(tag)"
+                class="px-3 py-1.5 rounded-xl text-sm font-medium border transition-colors hover:border-orange-500 dark:hover:border-orange-500"
+              >
+                {{ tag }}
+              </button>
+            }
+          </div>
+        </div>
+
+        @if (state.selectedTags().length > 0) {
+          <button
+            (click)="state.selectedTags.set([])"
+            class="w-full py-2 px-4 border border-zinc-300 dark:border-zinc-600 rounded-xl text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
+          >
+            Wyczyść filtry
+          </button>
+        }
+      </div>
+    </aside>
+
+    <!-- Main Content / Listings -->
+    <main class="flex-1">
+      @if (state.filteredListings().length === 0) {
+        <div class="text-center py-16 bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-100 dark:border-zinc-700 border-dashed">
+          <mat-icon class="text-zinc-400 dark:text-zinc-600 mb-4" style="font-size: 48px; height: 48px; width: 48px;">search_off</mat-icon>
+          <h3 class="text-lg font-medium text-zinc-900 dark:text-white mb-2">Brak wyników</h3>
+          <p class="text-zinc-500 dark:text-zinc-400">Spróbuj zmienić kryteria wyszukiwania lub usunąć filtry.</p>
+          <button
+            (click)="state.selectedTags.set([]); state.setSearchQuery('')"
+            class="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl shadow-sm text-white bg-orange-500 hover:bg-orange-600 transition-colors"
+          >
+            Pokaż wszystkie
+          </button>
+        </div>
+      } @else {
+        <div
+          class="grid gap-3 sm:gap-6"
+          [ngClass]="{
+                'grid-cols-2 md:grid-cols-3 xl:grid-cols-4': state.viewMode() === 'grid',
+                'grid-cols-1': state.viewMode() === 'list'
+              }"
+        >
+          @for (listing of state.filteredListings(); track listing.id) {
+            <app-listing-card class="block h-full" [listing]="listing" [viewMode]="state.viewMode()"></app-listing-card>
+          }
+        </div>
+      }
+    </main>
+
+  </div>
+</div>

@@ -1,0 +1,87 @@
+@if (isOpen) {
+  <div
+    class="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto overflow-x-hidden bg-zinc-900/50 backdrop-blur-sm transition-opacity"
+  >
+    <div class="relative w-full max-w-lg p-4 h-full md:h-auto">
+      <div
+        class="relative bg-white dark:bg-zinc-800 rounded-2xl shadow-xl border border-zinc-100 dark:border-zinc-700"
+      >
+        <div
+          class="flex items-center justify-between p-5 border-b border-zinc-100 dark:border-zinc-700 rounded-t-2xl"
+        >
+          <h3 class="text-xl font-semibold text-zinc-900 dark:text-white">
+            Edytuj Profil
+          </h3>
+          <button
+            type="button"
+            class="text-zinc-400 bg-transparent hover:bg-zinc-200 hover:text-zinc-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-zinc-700 dark:hover:text-white transition-colors"
+            (click)="close()"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+
+        <div class="p-6 space-y-6">
+          <div>
+            <label
+              for="profile-name"
+              class="block mb-2 text-sm font-medium text-zinc-900 dark:text-white"
+            >Nazwa</label
+            >
+            <input
+              id="profile-name"
+              type="text"
+              [(ngModel)]="editData.name"
+              class="bg-zinc-50 border border-zinc-300 text-zinc-900 text-sm rounded-xl focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5 dark:bg-zinc-700 dark:border-zinc-600 dark:placeholder-zinc-400 dark:text-white dark:focus:ring-orange-500 dark:focus:border-orange-500"
+            />
+          </div>
+
+          <div>
+            <label
+              for="profile-avatar"
+              class="block mb-2 text-sm font-medium text-zinc-900 dark:text-white"
+            >URL Zdjęcia Profilowego</label
+            >
+            <input
+              id="profile-avatar"
+              type="text"
+              [(ngModel)]="editData.avatarUrl"
+              class="bg-zinc-50 border border-zinc-300 text-zinc-900 text-sm rounded-xl focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5 dark:bg-zinc-700 dark:border-zinc-600 dark:placeholder-zinc-400 dark:text-white dark:focus:ring-orange-500 dark:focus:border-orange-500"
+            />
+          </div>
+
+          <div>
+            <label
+              for="profile-desc"
+              class="block mb-2 text-sm font-medium text-zinc-900 dark:text-white"
+            >Opis</label
+            >
+            <textarea
+              id="profile-desc"
+              [(ngModel)]="editData.description"
+              rows="4"
+              class="block p-2.5 w-full text-sm text-zinc-900 bg-zinc-50 rounded-xl border border-zinc-300 focus:ring-orange-500 focus:border-orange-500 dark:bg-zinc-700 dark:border-zinc-600 dark:placeholder-zinc-400 dark:text-white dark:focus:ring-orange-500 dark:focus:border-orange-500"
+            ></textarea>
+          </div>
+        </div>
+
+        <div
+          class="flex items-center justify-end p-6 border-t border-zinc-100 dark:border-zinc-700 rounded-b-2xl space-x-3"
+        >
+          <button
+            (click)="close()"
+            class="px-4 py-2 border border-zinc-300 dark:border-zinc-600 rounded-xl text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
+          >
+            Anuluj
+          </button>
+          <button
+            (click)="save()"
+            class="px-4 py-2 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors"
+          >
+            Zapisz zmiany
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
