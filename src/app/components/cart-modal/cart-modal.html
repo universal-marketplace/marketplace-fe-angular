@@ -1,9 +1,10 @@
-
 @if (state.isCartModalOpen()) {
   <!-- Backdrop -->
   <div
     class="fixed inset-0 z-[100] bg-zinc-900/50 backdrop-blur-sm transition-opacity"
     (click)="state.closeCartModal()"
+    (keydown.enter)="state.closeCartModal()"
+    tabindex="0"
   ></div>
 
   <!-- Sliding Panel -->
@@ -28,7 +29,7 @@
 
     <!-- Content -->
     <div class="flex-1 overflow-y-auto p-4">
-      @if (state.cart().length === 0) {
+      @if ((state.cart()?.items?.length || 0) === 0) {
         <div class="flex flex-col items-center justify-center h-full text-center text-zinc-500 dark:text-zinc-400">
           <mat-icon class="mb-4 text-zinc-300 dark:text-zinc-600" style="font-size: 64px; height: 64px; width: 64px;">remove_shopping_cart</mat-icon>
           <p class="text-lg font-medium text-zinc-900 dark:text-white mb-1">Twój koszyk jest pusty</p>
@@ -42,7 +43,7 @@
         </div>
       } @else {
         <div class="space-y-4">
-          @for (item of state.cart(); track item.id) {
+          @for (item of state.cart()?.items || []; track item.listingId) {
             <div class="flex items-start p-3 bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl border border-zinc-100 dark:border-zinc-700">
               <img
                 [src]="item.imageUrl"
@@ -52,14 +53,33 @@
               >
               <div class="ml-3 flex-1 min-w-0">
                 <h4 class="text-sm font-semibold text-zinc-900 dark:text-white line-clamp-2 mb-1">{{ item.title }}</h4>
-                <div class="text-sm font-bold text-orange-500 mb-2">{{ item.price }}</div>
-                <button
-                  (click)="state.removeFromCart(item.id)"
-                  class="text-xs text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 font-medium flex items-center transition-colors"
-                >
-                  <mat-icon style="font-size: 14px; height: 14px; width: 14px; margin-right: 2px;">delete</mat-icon>
-                  Usuń
-                </button>
+                <div class="text-sm font-bold text-orange-500 mb-2">{{ item.unitPrice }} PLN</div>
+                <div class="text-xs text-zinc-500 mb-2">Razem: {{ item.subtotal }} PLN</div>
+                <div class="flex items-center justify-between mt-2">
+                  <div class="flex items-center space-x-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg p-1">
+                    <button
+                      (click)="updateQuantity(item.listingId, item.quantity - 1)"
+                      [disabled]="item.quantity <= 1"
+                      class="p-1 rounded-md hover:bg-white dark:hover:bg-zinc-700 text-zinc-500 disabled:opacity-50 transition-colors"
+                    >
+                      <mat-icon style="font-size: 16px; height: 16px; width: 16px;">remove</mat-icon>
+                    </button>
+                    <span class="text-sm font-medium text-zinc-900 dark:text-white min-w-[1.5rem] text-center">{{ item.quantity }}</span>
+                    <button
+                      (click)="updateQuantity(item.listingId, item.quantity + 1)"
+                      class="p-1 rounded-md hover:bg-white dark:hover:bg-zinc-700 text-zinc-500 transition-colors"
+                    >
+                      <mat-icon style="font-size: 16px; height: 16px; width: 16px;">add</mat-icon>
+                    </button>
+                  </div>
+                  <button
+                    (click)="state.removeFromCart(item.listingId)"
+                    class="text-xs text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 font-medium flex items-center transition-colors"
+                  >
+                    <mat-icon style="font-size: 14px; height: 14px; width: 14px; margin-right: 2px;">delete</mat-icon>
+                    Usuń
+                  </button>
+                </div>
               </div>
             </div>
           }
@@ -68,11 +88,15 @@
     </div>
 
     <!-- Footer / Checkout -->
-    @if (state.cart().length > 0) {
+    @if ((state.cart()?.items?.length || 0) > 0) {
       <div class="p-4 border-t border-zinc-100 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50">
-        <div class="flex justify-between items-center mb-4">
+        <div class="flex justify-between items-center mb-2">
           <span class="text-zinc-600 dark:text-zinc-400 font-medium">Ilość przedmiotów:</span>
-          <span class="text-lg font-bold text-zinc-900 dark:text-white">{{ state.cart().length }}</span>
+          <span class="text-lg font-bold text-zinc-900 dark:text-white">{{ state.cart()?.items?.length || 0 }}</span>
+        </div>
+        <div class="flex justify-between items-center mb-4">
+          <span class="text-zinc-600 dark:text-zinc-400 font-medium">Suma:</span>
+          <span class="text-xl font-bold text-orange-500">{{ state.cart()?.totalPrice }} PLN</span>
         </div>
         <button
           (click)="buyItems()"

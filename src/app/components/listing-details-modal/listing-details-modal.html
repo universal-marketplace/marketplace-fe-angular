@@ -3,6 +3,8 @@
   <div
     class="fixed inset-0 z-[100] bg-zinc-900/50 backdrop-blur-sm transition-opacity"
     (click)="state.closeListingDetails()"
+    (keydown.enter)="state.closeListingDetails()"
+    tabindex="0"
   ></div>
 
   <!-- Sliding Panel -->
@@ -32,6 +34,9 @@
       >
 
       <div class="flex flex-wrap gap-2 mb-4">
+            <span class="px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 rounded-full text-xs font-bold uppercase tracking-wider">
+              {{ state.selectedListing()?.type === 'SERVICE' ? 'Usługa' : 'Przedmiot' }}
+            </span>
         @for (tag of state.selectedListing()?.tags; track tag) {
           <span class="px-3 py-1 bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-full text-xs font-medium">
                 {{ tag }}
@@ -45,10 +50,10 @@
 
       <div class="flex items-center justify-between mb-6">
         <div class="text-2xl font-bold text-orange-500">
-          {{ state.selectedListing()?.price }}
+          {{ state.selectedListing()?.price }} PLN
         </div>
 
-        @if (state.currentUser()?.role === 'user') {
+        @if (state.currentUser() && state.currentUser()?.id !== state.selectedListing()?.advertiserId) {
           <button
             (click)="addToCart()"
             class="inline-flex items-center px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-xl shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
@@ -56,6 +61,10 @@
             <mat-icon class="mr-2" style="font-size: 20px; height: 20px; width: 20px;">add_shopping_cart</mat-icon>
             Do koszyka
           </button>
+        } @else if (state.currentUser()?.id === state.selectedListing()?.advertiserId) {
+          <span class="inline-flex items-center px-4 py-2 bg-zinc-100 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400 text-sm font-medium rounded-xl">
+                To twoje ogłoszenie
+              </span>
         }
       </div>
 

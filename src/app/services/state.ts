@@ -1,111 +1,73 @@
-import {computed, inject, Injectable, signal} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
-import {Listing, Review, User} from '../models';
-import {catchError, forkJoin, of} from 'rxjs';
+import { Injectable, signal, computed, inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { catchError, forkJoin, of, map, Observable } from 'rxjs';
+import { Listing, Review, User, CartDto, AddToCartRequest, PageResponse } from '../models';
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class State {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8080/api'; // Spring Boot backend URL
+  private router = inject(Router);
+  private platformId = inject(PLATFORM_ID);
+  private apiUrl = 'http://localhost:8080/api'; 
 
-  // Local fallback arrays if backend is unavailable
-  private localListings: Listing[] = [];
-  private localUsers: User[] = [];
-  private localReviews: Review[] = [];
-
-  // Theme state
   isDarkMode = signal<boolean>(false);
-
-  // View mode state
   viewMode = signal<'grid' | 'list'>('grid');
-
-  // Auth state
   currentUser = signal<User | null>(null);
   isAuthModalOpen = signal<boolean>(false);
   isAccountSettingsModalOpen = signal<boolean>(false);
-
-  // Data state
   listings = signal<Listing[]>([]);
   users = signal<User[]>([]);
   reviews = signal<Review[]>([]);
-
-  // Cart state
-  cart = signal<Listing[]>([]);
+  cart = signal<CartDto | null>(null);
   isCartModalOpen = signal<boolean>(false);
-
-  // Filter state
   searchQuery = signal<string>('');
   selectedTags = signal<string[]>([]);
-
-  // Selected listing for details modal
+  listingTypeFilter = signal<'ALL' | 'ITEM' | 'SERVICE'>('ALL');
   selectedListing = signal<Listing | null>(null);
+
+  activeProfileListings = signal<Listing[]>([]);
+  activeProfileReviews = signal<Review[]>([]);
 
   constructor() {
     this.loadInitialData();
   }
 
   private loadInitialData() {
-    forkJoin({
-      listings: this.http.get<Listing[]>(`${this.apiUrl}/listings`).pipe(
-        catchError(() => {
-          console.warn('Backend niedostępny. Używam lokalnej tablicy ogłoszeń.');
-          return of(this.localListings);
-        })
-      ),
-      users: this.http.get<User[]>(`${this.apiUrl}/users`).pipe(
-        catchError(() => {
-          console.warn('Backend niedostępny. Używam lokalnej tablicy użytkowników.');
-          return of(this.localUsers);
-        })
-      ),
-      reviews: this.http.get<Review[]>(`${this.apiUrl}/reviews`).pipe(
-        catchError(() => {
-          console.warn('Backend niedostępny. Używam lokalnej tablicy opinii.');
-          return of(this.localReviews);
-        })
-      )
-    }).subscribe(data => {
-      this.listings.set(data.listings);
-      this.users.set(data.users);
-      this.reviews.set(data.reviews);
+    if (!isPlatformBrowser(this.platformId)) return;
 
-      // Update local arrays to match fetched data (if successful)
-      this.localListings = [...data.listings];
-      this.localUsers = [...data.users];
-      this.localReviews = [...data.reviews];
+    this.http.get<PageResponse<Listing>>(`${this.apiUrl}/listings`).pipe(
+      map(res => res.content),
+      catchError(() => of([]))
+    ).subscribe(data => {
+      this.listings.set(data);
+      const token = localStorage.getItem('token');
+      if (token) {
+        this.fetchCurrentUser();
+      }
     });
   }
 
-  // Computed filtered listings
-  filteredListings = computed(() => {
-    let filtered = this.listings();
-    const query = this.searchQuery().toLowerCase();
-    const tags = this.selectedTags();
-
-    if (query) {
-      filtered = filtered.filter(l =>
-        l.title.toLowerCase().includes(query) ||
-        l.description.toLowerCase().includes(query)
-      );
-    }
-
-    if (tags.length > 0) {
-      filtered = filtered.filter(l =>
-        tags.every(tag => l.tags.includes(tag))
-      );
-    }
-
-    return filtered;
-  });
-
-  // Computed available tags
-  availableTags = computed(() => {
-    const tags = new Set<string>();
-    this.listings().forEach(l => l.tags.forEach((t: string) => tags.add(t)));
-    return Array.from(tags).sort();
-  });
+  private fetchCurrentUser() {
+    this.http.get<User>(`${this.apiUrl}/users/me`).pipe(
+      catchError((err) => {
+        console.error('Błąd pobierania /me:', err);
+        localStorage.removeItem('token');
+        return of(null);
+      })
+    ).subscribe(user => {
+      if (user) {
+        if (!user.avatarUrl) {
+          user.avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`;
+        }
+        this.currentUser.set(user);
+        this.loadCart();
+      }
+    });
+  }
 
   toggleTheme() {
     this.isDarkMode.update(v => !v);
@@ -116,252 +78,236 @@ export class State {
     }
   }
 
-  toggleViewMode() {
-    this.viewMode.update(v => v === 'grid' ? 'list' : 'grid');
-  }
+  setViewMode(mode: 'grid' | 'list') { this.viewMode.set(mode); }
+  openAuthModal() { this.isAuthModalOpen.set(true); }
+  closeAuthModal() { this.isAuthModalOpen.set(false); }
+  openAccountSettingsModal() { this.isAccountSettingsModalOpen.set(true); }
+  closeAccountSettingsModal() { this.isAccountSettingsModalOpen.set(false); }
+  openCartModal() { this.isCartModalOpen.set(true); this.loadCart(); }
+  closeCartModal() { this.isCartModalOpen.set(false); }
+  openListingDetails(listing: Listing) { this.selectedListing.set(listing); }
+  closeListingDetails() { this.selectedListing.set(null); }
 
-  openListingDetails(listing: Listing) {
-    this.selectedListing.set(listing);
+  setSearchQuery(query: string) { this.searchQuery.set(query); }
+  toggleTag(tag: string) {
+    this.selectedTags.update(tags =>
+      tags.includes(tag) ? tags.filter(t => t !== tag) : [...tags, tag]
+    );
   }
-
-  closeListingDetails() {
-    this.selectedListing.set(null);
-  }
-
-  openAuthModal() {
-    this.isAuthModalOpen.set(true);
-  }
-
-  closeAuthModal() {
-    this.isAuthModalOpen.set(false);
-  }
-
-  login(userId: string) {
-    const user = this.users().find(u => u.id === userId);
-    if (user) {
-      this.currentUser.set(user);
-      this.closeAuthModal();
-    }
-  }
+  setListingTypeFilter(filter: 'ALL' | 'ITEM' | 'SERVICE') { this.listingTypeFilter.set(filter); }
 
   loginWithCredentials(email: string, password?: string): boolean {
-    // For mock purposes, we just check email and password
-    const user = this.users().find(u => u.email === email && u.password === password);
-    if (user) {
-      this.currentUser.set(user);
-      this.closeAuthModal();
-      return true;
-    }
-    return false;
+    this.http.post<{token: string}>(`${this.apiUrl}/auth/login`, { email, password }).pipe(
+      catchError(() => of(null))
+    ).subscribe(res => {
+      if (res && res.token) {
+        localStorage.setItem('token', res.token);
+        this.fetchCurrentUser();
+        this.closeAuthModal();
+      }
+    });
+    return true;
   }
 
-  register(name: string, email: string, role: 'user' | 'advertiser', password?: string) {
-    const newUser: User = {
-      id: Math.random().toString(36).substring(2, 9),
-      name,
-      email,
-      password,
-      role,
-      avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
-      description: 'Nowy użytkownik platformy.',
-      rating: 0,
-      reviewCount: 0
-    };
-
-    this.http.post<User>(`${this.apiUrl}/users`, newUser).pipe(
-      catchError(() => {
-        console.warn('Backend niedostępny. Rejestracja lokalna.');
-        this.localUsers.push(newUser);
-        return of(newUser);
-      })
+  register(name: string, email: string, password?: string) {
+    const payload = { name, email, password, passwordRepeated: password };
+    this.http.post<User>(`${this.apiUrl}/auth/register`, payload).pipe(
+      catchError(() => of(null))
     ).subscribe(user => {
-      this.users.update(users => [...users, user]);
-      this.currentUser.set(user);
-      this.closeAuthModal();
+      if (user) {
+        this.loginWithCredentials(email, password);
+      }
     });
   }
 
   logout() {
     this.currentUser.set(null);
-    this.cart.set([]); // Clear cart on logout
+    this.cart.set(null);
+    localStorage.removeItem('token');
+    this.activeProfileListings.set([]);
+    this.activeProfileReviews.set([]);
+    this.router.navigate(['/']);
   }
 
-  // Cart methods
-  openCartModal() {
-    this.isCartModalOpen.set(true);
+  loadCart() {
+    if (!isPlatformBrowser(this.platformId) || !this.currentUser()) return;
+    this.http.get<CartDto>(`${this.apiUrl}/cart`).pipe(
+      catchError(() => of({ items: [], totalPrice: 0 } as CartDto))
+    ).subscribe(cart => this.cart.set(cart));
   }
 
-  closeCartModal() {
-    this.isCartModalOpen.set(false);
+  addToCart(listingOrId: Listing | number, quantity: number = 1) {
+    if (!this.currentUser()) { this.openAuthModal(); return; }
+    const listingId = typeof listingOrId === 'number' ? listingOrId : listingOrId.id;
+    const payload: AddToCartRequest = { listingId, quantity };
+    this.http.post<CartDto>(`${this.apiUrl}/cart/items/`, payload).subscribe(c => this.cart.set(c));
   }
 
-  addToCart(listing: Listing) {
-    const user = this.currentUser();
-    if (user && user.role === 'user') {
-      this.cart.update(items => {
-        // Prevent adding duplicates
-        if (items.find(item => item.id === listing.id)) {
-          return items;
-        }
-        return [...items, listing];
-      });
-    }
+  removeFromCart(listingId: number) {
+    if (!this.currentUser()) return;
+    this.http.delete<CartDto>(`${this.apiUrl}/cart/items/${listingId}`).subscribe(c => this.cart.set(c));
   }
 
-  removeFromCart(listingId: string) {
-    this.cart.update(items => items.filter(item => item.id !== listingId));
+  updateCartItemQuantity(listingId: number, quantity: number) {
+    if (!this.currentUser() || quantity < 1) return;
+    const payload: AddToCartRequest = { listingId, quantity };
+    this.http.put<CartDto>(`${this.apiUrl}/cart/items/`, payload).subscribe(c => this.cart.set(c));
   }
 
   clearCart() {
-    this.cart.set([]);
+    if (!this.currentUser()) return;
+    this.http.delete<CartDto>(`${this.apiUrl}/cart`).subscribe(c => this.cart.set(c));
   }
 
-  toggleTag(tag: string) {
-    this.selectedTags.update(tags => {
-      if (tags.includes(tag)) {
-        return tags.filter(t => t !== tag);
-      } else {
-        return [...tags, tag];
+  updateUser(userId: number, data: Partial<User>) {
+    const payload = {
+      name: data.name,
+      email: data.email,
+      emailRepeated: data.email || this.currentUser()?.email,
+      description: data.description,
+      avatarUrl: data.avatarUrl
+    };
+    this.http.put<User>(`${this.apiUrl}/users/me`, payload).pipe(
+      catchError((err) => {
+        console.error('Błąd profilu:', err);
+        return of(null);
+      })
+    ).subscribe(updatedUser => {
+      if (updatedUser) {
+        this.currentUser.set(updatedUser);
+        // Po edycji profilu odświeżamy dane w widoku profilu, jeśli go oglądamy
+        this.loadProfileData(userId);
       }
     });
   }
 
-  setSearchQuery(query: string) {
-    this.searchQuery.set(query);
+  addListing(listing: any) {
+    const payload = {
+      title: listing.title,
+      description: listing.description,
+      priceAmount: listing.price,
+      type: listing.type,
+      tags: listing.tags,
+      imageUrl: listing.imageUrl
+    };
+    this.http.post<Listing>(`${this.apiUrl}/listings`, payload).subscribe(newListing => {
+      if (newListing) {
+        this.listings.update(listings => [newListing, ...listings]);
+        // Jeśli dodajemy ogłoszenie, odświeżamy listę na profilu
+        if (this.currentUser()) {
+          this.loadProfileData(this.currentUser()!.id);
+        }
+      }
+    });
   }
 
-  getUser(id: string): User | undefined {
+  updateListing(id: number, listing: any) {
+    const payload = {
+      title: listing.title,
+      description: listing.description,
+      priceAmount: listing.price,
+      type: listing.type,
+      tags: listing.tags,
+      imageUrl: listing.imageUrl
+    };
+    this.http.put<Listing>(`${this.apiUrl}/listings/${id}`, payload).subscribe(updatedListing => {
+      if (updatedListing) {
+        this.listings.update(listings => listings.map(l => l.id === id ? updatedListing : l));
+        // Po aktualizacji odświeżamy listę na profilu
+        if (this.currentUser()) {
+          this.loadProfileData(this.currentUser()!.id);
+        }
+      }
+    });
+  }
+
+  deleteListing(id: number) {
+    this.http.delete(`${this.apiUrl}/listings/${id}`).subscribe(() => {
+      this.listings.update(listings => listings.filter(l => l.id !== id));
+      // Po usunięciu odświeżamy listę na profilu
+      if (this.currentUser()) {
+        this.loadProfileData(this.currentUser()!.id);
+      }
+    });
+  }
+
+  addReviewReply(reviewId: number, comment: string) {
+    this.http.post<Review>(`${this.apiUrl}/reviews/${reviewId}/reply`, { reply: comment }).subscribe(updatedReview => {
+      if (updatedReview) {
+        this.reviews.update(reviews => reviews.map(r => r.id === reviewId ? updatedReview : r));
+        this.activeProfileReviews.update(revs => revs.map(r => r.id === reviewId ? updatedReview : r));
+      }
+    });
+  }
+
+  addReview(targetId: number, rating: number, comment: string) {
+    const payload = { targetId, rating, comment };
+    this.http.post<Review>(`${this.apiUrl}/reviews`, payload).subscribe(newReview => {
+      if (newReview) {
+        this.reviews.update(reviews => [newReview, ...reviews]);
+        this.activeProfileReviews.update(revs => [newReview, ...revs]);
+      }
+    });
+  }
+
+  fetchUser(id: number): Observable<User> {
+    return this.http.get<User>(`${this.apiUrl}/users/${id}`);
+  }
+
+  getUser(id: number) {
     return this.users().find(u => u.id === id);
   }
 
-  getUserListings(userId: string): Listing[] {
-    return this.listings().filter(l => l.advertiserId === userId);
+  loadProfileData(userId: number) {
+    this.http.get<PageResponse<Listing>>(`${this.apiUrl}/users/${userId}/listings`).pipe(
+      map(res => res.content),
+      catchError(() => of([]))
+    ).subscribe(data => this.activeProfileListings.set(data));
+
+    this.http.get<PageResponse<Review>>(`${this.apiUrl}/users/${userId}/reviews`).pipe(
+      map(res => res.content),
+      catchError(() => of([]))
+    ).subscribe(data => this.activeProfileReviews.set(data));
   }
 
-  getUserReviews(userId: string): Review[] {
-    return this.reviews().filter(r => r.targetId === userId);
+  getUserListings(userId: number): Listing[] {
+    return this.activeProfileListings();
   }
 
-  updateUser(userId: string, data: Partial<User>) {
-    this.http.patch<User>(`${this.apiUrl}/users/${userId}`, data).pipe(
-      catchError(() => {
-        console.warn('Backend niedostępny. Aktualizacja użytkownika lokalnie.');
-        const index = this.localUsers.findIndex(u => u.id === userId);
-        if (index !== -1) {
-          this.localUsers[index] = { ...this.localUsers[index], ...data };
-        }
-        return of(null);
-      })
-    ).subscribe(() => {
-      this.users.update(users => users.map(u => u.id === userId ? { ...u, ...data } : u));
-      if (this.currentUser()?.id === userId) {
-        this.currentUser.set(this.users().find(u => u.id === userId) || null);
-      }
+  getUserReviews(userId: number): Review[] {
+    return this.activeProfileReviews();
+  }
+
+  filteredListings = computed(() => {
+    let result = this.listings();
+    if (this.listingTypeFilter() !== 'ALL') {
+      result = result.filter(l => l.type === this.listingTypeFilter());
+    }
+    if (this.searchQuery()) {
+      const query = this.searchQuery().toLowerCase();
+      result = result.filter(l =>
+        l.title.toLowerCase().includes(query) ||
+        l.description.toLowerCase().includes(query) ||
+        l.tags.some(t => t.toLowerCase().includes(query))
+      );
+    }
+    if (this.selectedTags().length > 0) {
+      result = result.filter(l =>
+        this.selectedTags().every(tag => l.tags.includes(tag))
+      );
+    }
+    return result;
+  });
+
+  availableTags = computed(() => {
+    const tags = new Set<string>();
+    this.listings().forEach(l => {
+        if (l.tags) l.tags.forEach(t => tags.add(t));
     });
-  }
+    return Array.from(tags).sort();
+  });
 
-  addListing(data: Omit<Listing, 'id' | 'advertiserId' | 'advertiserName' | 'advertiserAvatar' | 'rating' | 'reviewCount'>) {
-    const user = this.currentUser();
-    if (!user || user.role !== 'advertiser') return;
-
-    const newListing: Listing = {
-      ...data,
-      id: Math.random().toString(36).substring(2, 9),
-      advertiserId: user.id,
-      advertiserName: user.name,
-      advertiserAvatar: user.avatarUrl,
-      rating: 0,
-      reviewCount: 0
-    };
-
-    this.http.post<Listing>(`${this.apiUrl}/listings`, newListing).pipe(
-      catchError(() => {
-        console.warn('Backend niedostępny. Dodawanie ogłoszenia lokalnie.');
-        this.localListings.unshift(newListing);
-        return of(newListing);
-      })
-    ).subscribe(listing => {
-      this.listings.update(listings => [listing, ...listings]);
-    });
-  }
-
-  updateListing(id: string, data: Partial<Listing>) {
-    this.http.patch<Listing>(`${this.apiUrl}/listings/${id}`, data).pipe(
-      catchError(() => {
-        console.warn('Backend niedostępny. Aktualizacja ogłoszenia lokalnie.');
-        const index = this.localListings.findIndex(l => l.id === id);
-        if (index !== -1) {
-          this.localListings[index] = { ...this.localListings[index], ...data };
-        }
-        return of(null);
-      })
-    ).subscribe(() => {
-      this.listings.update(listings => listings.map(l => l.id === id ? { ...l, ...data } : l));
-    });
-  }
-
-  deleteListing(id: string) {
-    this.http.delete(`${this.apiUrl}/listings/${id}`).pipe(
-      catchError(() => {
-        console.warn('Backend niedostępny. Usuwanie ogłoszenia lokalnie.');
-        this.localListings = this.localListings.filter(l => l.id !== id);
-        return of(null);
-      })
-    ).subscribe(() => {
-      this.listings.update(listings => listings.filter(l => l.id !== id));
-    });
-  }
-
-  addReviewReply(reviewId: string, reply: string) {
-    const date = new Date().toISOString().split('T')[0];
-
-    this.http.patch<Review>(`${this.apiUrl}/reviews/${reviewId}/reply`, { reply, replyDate: date }).pipe(
-      catchError(() => {
-        console.warn('Backend niedostępny. Dodawanie odpowiedzi lokalnie.');
-        const index = this.localReviews.findIndex(r => r.id === reviewId);
-        if (index !== -1) {
-          this.localReviews[index] = { ...this.localReviews[index], reply, replyDate: date };
-        }
-        return of(null);
-      })
-    ).subscribe(() => {
-      this.reviews.update(reviews => reviews.map(r => r.id === reviewId ? { ...r, reply, replyDate: date } : r));
-    });
-  }
-
-  addReview(targetId: string, rating: number, comment: string) {
-    const user = this.currentUser();
-    if (!user) return;
-
-    const newReview: Review = {
-      id: Math.random().toString(36).substring(2, 9),
-      authorId: user.id,
-      authorName: user.name,
-      authorAvatar: user.avatarUrl,
-      targetId,
-      rating,
-      comment,
-      date: new Date().toISOString().split('T')[0]
-    };
-
-    this.http.post<Review>(`${this.apiUrl}/reviews`, newReview).pipe(
-      catchError(() => {
-        console.warn('Backend niedostępny. Dodawanie opinii lokalnie.');
-        this.localReviews.unshift(newReview);
-        return of(newReview);
-      })
-    ).subscribe(review => {
-      this.reviews.update(reviews => [review, ...reviews]);
-
-      // Recalculate target user's rating
-      const targetUserReviews = this.reviews().filter(r => r.targetId === targetId);
-      const totalRating = targetUserReviews.reduce((sum, r) => sum + r.rating, 0);
-      const averageRating = targetUserReviews.length > 0 ? totalRating / targetUserReviews.length : 0;
-
-      this.updateUser(targetId, {
-        rating: averageRating,
-        reviewCount: targetUserReviews.length
-      });
-    });
-  }
+  cartCount = computed(() => {
+    return this.cart()?.items.reduce((acc, item) => acc + item.quantity, 0) || 0;
+  });
 }

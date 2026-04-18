@@ -48,6 +48,58 @@
 
         <!-- Tags Filter -->
         <div class="mb-6">
+          <h3 class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3 uppercase tracking-wider">Typ ogłoszenia</h3>
+          <div class="flex flex-col gap-2 mb-6">
+            <button
+              (click)="state.listingTypeFilter.set('ALL')"
+              [class.bg-orange-500]="state.listingTypeFilter() === 'ALL'"
+              [class.text-white]="state.listingTypeFilter() === 'ALL'"
+              [class.border-orange-500]="state.listingTypeFilter() === 'ALL'"
+              [class.bg-zinc-50]="state.listingTypeFilter() !== 'ALL'"
+              [class.dark:bg-zinc-900]="state.listingTypeFilter() !== 'ALL'"
+              [class.text-zinc-700]="state.listingTypeFilter() !== 'ALL'"
+              [class.dark:text-zinc-300]="state.listingTypeFilter() !== 'ALL'"
+              [class.border-zinc-200]="state.listingTypeFilter() !== 'ALL'"
+              [class.dark:border-zinc-700]="state.listingTypeFilter() !== 'ALL'"
+              class="w-full px-3 py-2 rounded-xl text-sm font-medium border transition-colors hover:border-orange-500 dark:hover:border-orange-500 text-left flex items-center"
+            >
+              <mat-icon class="mr-2" style="font-size: 18px; width: 18px; height: 18px;">apps</mat-icon>
+              Wszystko
+            </button>
+            <button
+              (click)="state.listingTypeFilter.set('ITEM')"
+              [class.bg-orange-500]="state.listingTypeFilter() === 'ITEM'"
+              [class.text-white]="state.listingTypeFilter() === 'ITEM'"
+              [class.border-orange-500]="state.listingTypeFilter() === 'ITEM'"
+              [class.bg-zinc-50]="state.listingTypeFilter() !== 'ITEM'"
+              [class.dark:bg-zinc-900]="state.listingTypeFilter() !== 'ITEM'"
+              [class.text-zinc-700]="state.listingTypeFilter() !== 'ITEM'"
+              [class.dark:text-zinc-300]="state.listingTypeFilter() !== 'ITEM'"
+              [class.border-zinc-200]="state.listingTypeFilter() !== 'ITEM'"
+              [class.dark:border-zinc-700]="state.listingTypeFilter() !== 'ITEM'"
+              class="w-full px-3 py-2 rounded-xl text-sm font-medium border transition-colors hover:border-orange-500 dark:hover:border-orange-500 text-left flex items-center"
+            >
+              <mat-icon class="mr-2" style="font-size: 18px; width: 18px; height: 18px;">inventory_2</mat-icon>
+              Przedmioty
+            </button>
+            <button
+              (click)="state.listingTypeFilter.set('SERVICE')"
+              [class.bg-orange-500]="state.listingTypeFilter() === 'SERVICE'"
+              [class.text-white]="state.listingTypeFilter() === 'SERVICE'"
+              [class.border-orange-500]="state.listingTypeFilter() === 'SERVICE'"
+              [class.bg-zinc-50]="state.listingTypeFilter() !== 'SERVICE'"
+              [class.dark:bg-zinc-900]="state.listingTypeFilter() !== 'SERVICE'"
+              [class.text-zinc-700]="state.listingTypeFilter() !== 'SERVICE'"
+              [class.dark:text-zinc-300]="state.listingTypeFilter() !== 'SERVICE'"
+              [class.border-zinc-200]="state.listingTypeFilter() !== 'SERVICE'"
+              [class.dark:border-zinc-700]="state.listingTypeFilter() !== 'SERVICE'"
+              class="w-full px-3 py-2 rounded-xl text-sm font-medium border transition-colors hover:border-orange-500 dark:hover:border-orange-500 text-left flex items-center"
+            >
+              <mat-icon class="mr-2" style="font-size: 18px; width: 18px; height: 18px;">handyman</mat-icon>
+              Usługi
+            </button>
+          </div>
+
           <h3 class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3 uppercase tracking-wider">Popularne Tagi</h3>
           <div class="flex flex-wrap gap-2">
             @for (tag of state.availableTags(); track tag) {

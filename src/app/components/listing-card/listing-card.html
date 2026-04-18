@@ -1,8 +1,9 @@
-
 <div
   class="group bg-white dark:bg-zinc-800 rounded-2xl shadow-sm hover:shadow-md border border-zinc-100 dark:border-zinc-700 overflow-hidden transition-all duration-300 flex h-full cursor-pointer"
   [ngClass]="viewMode === 'list' ? 'flex-col sm:flex-row' : 'flex-col max-sm:aspect-square'"
   (click)="openDetails()"
+  (keydown.enter)="openDetails()"
+  tabindex="0"
 >
   <!-- Image Container -->
   <div
@@ -15,10 +16,17 @@
       class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
       referrerpolicy="no-referrer"
     >
-    <div class="absolute top-2 right-2 sm:top-3 sm:right-3 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-lg flex items-center shadow-sm">
-      <mat-icon class="text-orange-500 text-sm mr-1" style="font-size: 14px; height: 14px; width: 14px;">star</mat-icon>
-      <span class="text-[10px] sm:text-xs font-bold text-zinc-900 dark:text-white">{{ listing.rating | number:'1.1-1' }}</span>
-      <span class="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 ml-1 hidden sm:inline">({{ listing.reviewCount }})</span>
+    <div class="absolute top-2 right-2 sm:top-3 sm:right-3 flex flex-col gap-1 items-end">
+      <div class="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-lg flex items-center shadow-sm">
+        <mat-icon class="text-orange-500 text-sm mr-1" style="font-size: 14px; height: 14px; width: 14px;">star</mat-icon>
+        <span class="text-[10px] sm:text-xs font-bold text-zinc-900 dark:text-white">{{ listing.rating | number:'1.1-1' }}</span>
+        <span class="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 ml-1 hidden sm:inline">({{ listing.reviewCount }})</span>
+      </div>
+      <div class="bg-zinc-900/80 dark:bg-zinc-100/80 backdrop-blur-sm px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-lg shadow-sm">
+            <span class="text-[10px] sm:text-xs font-bold text-white dark:text-zinc-900 uppercase tracking-wider">
+              {{ listing.type === 'SERVICE' ? 'Usługa' : 'Przedmiot' }}
+            </span>
+      </div>
     </div>
   </div>
 
@@ -31,12 +39,12 @@
         {{ listing.title }}
       </h3>
       <div class="text-base sm:text-lg font-bold text-orange-500 whitespace-nowrap flex-shrink-0">
-        {{ listing.price }}
+        {{ listing.price }} PLN
       </div>
     </div>
 
     <!-- Advertiser Info -->
-    <div class="flex items-center mb-3 cursor-pointer min-w-0" [routerLink]="['/profile', listing.advertiserId]" (click)="$event.stopPropagation()">
+    <div class="flex items-center mb-3 cursor-pointer min-w-0" [routerLink]="['/profile', listing.advertiserId]" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" tabindex="0">
       <img
         [src]="listing.advertiserAvatar"
         [alt]="listing.advertiserName"

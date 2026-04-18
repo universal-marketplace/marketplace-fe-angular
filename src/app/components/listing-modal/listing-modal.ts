@@ -22,7 +22,8 @@ export class ListingModal {
         title: value.title,
         price: value.price,
         imageUrl: value.imageUrl,
-        description: value.description
+        description: value.description,
+        type: value.type || 'ITEM'
       };
       this.tagsString = value.tags.join(', ');
     } else {
@@ -30,26 +31,30 @@ export class ListingModal {
       this.listingId = null;
       this.formData = {
         title: '',
-        price: '',
+        price: 0,
         imageUrl: 'https://picsum.photos/seed/new/600/400',
-        description: ''
+        description: '',
+        type: 'ITEM'
       };
       this.tagsString = '';
     }
+    this.priceError = '';
   }
   @Output() isOpenChange = new EventEmitter<boolean>();
 
   state = inject(State);
 
   isEditing = false;
-  listingId: string | null = null;
+  listingId: number | null = null;
   tagsString = '';
+  priceError = '';
 
   formData = {
     title: '',
-    price: '',
+    price: 0,
     imageUrl: '',
-    description: ''
+    description: '',
+    type: 'ITEM' as 'ITEM' | 'SERVICE'
   };
 
   close() {
@@ -58,11 +63,17 @@ export class ListingModal {
   }
 
   isFormValid(): boolean {
-    return !!(this.formData.title && this.formData.price && this.formData.imageUrl && this.formData.description && this.tagsString);
+    return !!(this.formData.title && this.formData.price > 0 && this.formData.imageUrl && this.formData.description && this.tagsString);
   }
 
   onSubmit() {
+    this.priceError = '';
     if (!this.isFormValid()) return;
+
+    if (this.formData.price <= 0) {
+      this.priceError = 'Podaj prawidłową kwotę.';
+      return;
+    }
 
     const tags = this.tagsString.split(',').map(t => t.trim()).filter(t => t.length > 0);
     const data = {
