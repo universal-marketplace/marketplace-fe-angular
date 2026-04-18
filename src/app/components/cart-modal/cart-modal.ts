@@ -15,6 +15,12 @@ export class CartModal {
   state = inject(State);
   showSuccessToast = signal<boolean>(false);
 
+  updateQuantity(listingId: number, quantity: number) {
+    if (quantity > 0) {
+      this.state.updateCartItemQuantity(listingId, quantity);
+    }
+  }
+
   buyItems() {
     // Show success toast
     this.showSuccessToast.set(true);

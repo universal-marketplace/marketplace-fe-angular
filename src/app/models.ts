@@ -1,40 +1,77 @@
-export type Role = 'user' | 'advertiser';
+export interface PageResponse<T> {
+  content: T[];
+  pageNumber: number;
+  pageSize: number;
+  totalElements: number;
+  totalPages: number;
+  isLast: boolean;
+}
 
 export interface User {
-  id: string;
+  id: number;
   name: string;
   email: string;
   password?: string;
-  role: Role;
-  avatarUrl: string;
+  avatarUrl?: string;
   description: string;
   rating: number;
   reviewCount: number;
 }
 
-export interface Review {
-  id: string;
-  authorId: string;
+export interface ReplyDto {
+  id: number;
+  authorId: number;
   authorName: string;
   authorAvatar: string;
-  targetId: string; // user or advertiser id
+  comment: string;
+  createdAt: string;
+  replies: ReplyDto[];
+}
+
+export interface Review {
+  id: number;
+  authorId: number;
+  authorName: string;
+  authorAvatar: string;
+  targetId: number;
   rating: number;
   comment: string;
   date: string;
-  reply?: string;
-  replyDate?: string;
+  replies: ReplyDto[];
 }
 
 export interface Listing {
-  id: string;
-  advertiserId: string;
+  id: number;
+  advertiserId: number;
   advertiserName: string;
   advertiserAvatar: string;
   title: string;
   description: string;
-  price: string;
+  price: number;
+  type: 'ITEM' | 'SERVICE';
   tags: string[];
   rating: number;
   reviewCount: number;
   imageUrl: string;
+}
+
+export interface CartItemDto {
+  id?: number;
+  listingId: number;
+  title: string;
+  unitPrice: number;
+  quantity: number;
+  subtotal: number;
+  imageUrl?: string;
+}
+
+export interface CartDto {
+  id?: number;
+  items: CartItemDto[];
+  totalPrice: number;
+}
+
+export interface AddToCartRequest {
+  listingId: number;
+  quantity: number;
 }

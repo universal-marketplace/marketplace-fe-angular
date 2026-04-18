@@ -1,8 +1,8 @@
 import {Component, inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {RouterLink} from '@angular/router';
-import {State} from '../../services/state';
 import {MatIconModule} from '@angular/material/icon';
+import {State} from '../../services/state';
 
 @Component({
   selector: 'app-listing-details-modal',

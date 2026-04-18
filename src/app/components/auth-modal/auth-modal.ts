@@ -1,7 +1,6 @@
 import {Component, inject, signal} from '@angular/core';
 import {State} from '../../services/state';
 import {Router} from '@angular/router';
-import {Role} from '../../models';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {MatIconModule} from '@angular/material/icon';
@@ -29,8 +28,7 @@ export class AuthModal {
     name: '',
     email: '',
     password: '',
-    passwordConfirm: '',
-    role: 'user' as Role
+    passwordConfirm: ''
   };
 
   onLogin() {
@@ -48,14 +46,13 @@ export class AuthModal {
 
   onRegister() {
     if (this.regData.name && this.regData.email && this.regData.password && this.regData.password === this.regData.passwordConfirm) {
-      this.state.register(this.regData.name, this.regData.email, this.regData.role, this.regData.password);
+      this.state.register(this.regData.name, this.regData.email, this.regData.password);
       // Reset form
       this.regData = {
         name: '',
         email: '',
         password: '',
-        passwordConfirm: '',
-        role: 'user'
+        passwordConfirm: ''
       };
       this.activeTab.set('login');
       this.router.navigate(['/']);

@@ -39,29 +39,29 @@
         @if (state.currentUser()) {
           <div class="relative flex items-center space-x-4">
 
-            <!-- Cart Icon (Users Only) -->
-            @if (state.currentUser()?.role === 'user') {
-              <button
-                (click)="state.openCartModal()"
-                class="relative p-2 rounded-full text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:outline-none transition-colors"
-                aria-label="Koszyk"
-              >
-                <mat-icon>shopping_cart</mat-icon>
-                @if (state.cart().length > 0) {
-                  <span class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-orange-500 rounded-full">
-                        {{ state.cart().length }}
+            <!-- Cart Icon -->
+            <button
+              (click)="state.openCartModal()"
+              class="relative p-2 rounded-full text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:outline-none transition-colors"
+              aria-label="Koszyk"
+            >
+              <mat-icon>shopping_cart</mat-icon>
+              @if ((state.cart()?.items?.length || 0) > 0) {
+                <span class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-orange-500 rounded-full">
+                        {{ state.cart()?.items?.length || 0 }}
                       </span>
-                }
-              </button>
-            }
+              }
+            </button>
 
             <div
               class="flex items-center space-x-3 cursor-pointer group"
               (click)="toggleDropdown()"
+              (keydown.enter)="toggleDropdown()"
+              tabindex="0"
             >
               <div class="hidden sm:block text-right">
                 <div class="text-sm font-medium text-zinc-900 dark:text-white">{{ state.currentUser()?.name }}</div>
-                <div class="text-xs text-orange-500 font-medium">{{ state.currentUser()?.role === 'advertiser' ? 'Ogłoszeniodawca' : 'Użytkownik' }}</div>
+                <div class="text-xs text-orange-500 font-medium">Użytkownik</div>
               </div>
               <img
                 class="h-10 w-10 rounded-full object-cover border-2 border-transparent group-hover:border-orange-500 transition-colors"
@@ -109,6 +109,8 @@
               <div
                 class="fixed inset-0 z-40"
                 (click)="isDropdownOpen = false"
+                (keydown.enter)="isDropdownOpen = false"
+                tabindex="0"
               ></div>
             }
           </div>

@@ -1,4 +1,4 @@
-import {Component, computed, inject, OnInit} from '@angular/core';
+import {ChangeDetectorRef, Component, computed, inject, OnInit, signal} from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
 import {State} from '../../services/state';
 import {Listing, User} from '../../models';
@@ -8,6 +8,7 @@ import {ListingCard} from '../listing-card/listing-card';
 import {EditProfileModal} from '../edit-profile-modal/edit-profile-modal';
 import {ListingModal} from '../listing-modal/listing-modal';
 import { MatIconModule } from '@angular/material/icon';
+import {catchError, of} from 'rxjs';
 
 @Component({
   selector: 'app-profile',
@@ -16,18 +17,36 @@ import { MatIconModule } from '@angular/material/icon';
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })
-export class Profile implements OnInit {
+export class Profile implements OnInit { 
   route = inject(ActivatedRoute);
   state = inject(State);
+  cdr = inject(ChangeDetectorRef);
 
-  user: User | undefined;
-  isOwnProfile = false;
+  // Sygnał przechowujący dane przeglądanego profilu
+  profileUser = signal<User | undefined>(undefined);
+  
+  // Zawsze wybieramy najświeższe dane: jeśli to nasz profil, bierzemy z currentUser()
+  displayUser = computed(() => {
+    const current = this.state.currentUser();
+    const profile = this.profileUser();
+    if (current && profile && current.id === profile.id) {
+      return current; // Tutaj są dane po edycji
+    }
+    return profile;
+  });
+
+  isOwnProfile = computed(() => {
+    const current = this.state.currentUser();
+    const profile = this.profileUser();
+    return !!(current && profile && current.id === profile.id);
+  });
+
   isEditModalOpen = false;
   isListingModalOpen = false;
   editingListing: Listing | null = null;
-  listingToDelete: string | null = null;
+  listingToDelete: number | null = null;
 
-  replyingTo: string | null = null;
+  replyingTo: number | null = null;
   replyText = '';
 
   newReview = {
@@ -36,25 +55,31 @@ export class Profile implements OnInit {
   };
   hoverRating = 0;
 
-  // Use computed to automatically react to state changes
-  listings = computed(() => {
-    if (!this.user) return [];
-    return this.state.getUserListings(this.user.id);
-  });
-
-  reviews = computed(() => {
-    if (!this.user) return [];
-    return this.state.getUserReviews(this.user.id);
-  });
+  listings = computed(() => this.state.getUserListings(0));
+  reviews = computed(() => this.state.getUserReviews(0));
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
-      const id = params.get('id');
-      if (id) {
-        this.user = this.state.getUser(id);
-        if (this.user) {
-          this.isOwnProfile = this.state.currentUser()?.id === id;
-        }
+      const idParam = params.get('id');
+      if (idParam) {
+        const id = Number(idParam);
+        this.profileUser.set(undefined);
+        this.state.loadProfileData(id);
+
+        this.state.fetchUser(id).pipe(
+          catchError(err => {
+            console.error('Błąd podczas pobierania użytkownika:', err);
+            return of(undefined);
+          })
+        ).subscribe(u => {
+          if (u) {
+            if (!u.avatarUrl) {
+              u.avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.name}`;
+            }
+            this.profileUser.set(u);
+          }
+          this.cdr.detectChanges();
+        });
       }
     });
   }
@@ -69,7 +94,7 @@ export class Profile implements OnInit {
     this.isListingModalOpen = true;
   }
 
-  deleteListing(id: string) {
+  deleteListing(id: number) {
     this.listingToDelete = id;
   }
 
@@ -80,7 +105,7 @@ export class Profile implements OnInit {
     }
   }
 
-  submitReply(reviewId: string) {
+  submitReply(reviewId: number) {
     if (this.replyText.trim()) {
       this.state.addReviewReply(reviewId, this.replyText.trim());
       this.replyingTo = null;
@@ -89,8 +114,13 @@ export class Profile implements OnInit {
   }
 
   submitReview() {
-    if (this.user && this.newReview.comment.trim()) {
-      this.state.addReview(this.user.id, this.newReview.rating, this.newReview.comment.trim());
+    if (this.isOwnProfile()) {
+        alert('Nie możesz wystawić opinii samemu sobie.');
+        return;
+    }
+    const user = this.displayUser();
+    if (user && this.newReview.comment.trim()) {
+      this.state.addReview(user.id, this.newReview.rating, this.newReview.comment.trim());
       this.newReview = { rating: 5, comment: '' };
     }
   }
