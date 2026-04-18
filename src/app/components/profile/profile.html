@@ -1,13 +1,14 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-  @if (displayUser()) {
+  <!-- Używamy aliasu 'user', aby TypeScript wiedział, że obiekt nie jest undefined -->
+  @if (displayUser(); as user) {
     <!-- Profile Header -->
     <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-sm border border-zinc-100 dark:border-zinc-700 overflow-hidden mb-8">
       <div class="h-32 bg-gradient-to-r from-orange-400 to-orange-600"></div>
       <div class="px-6 sm:px-8 pb-8">
         <div class="relative flex justify-between items-end -mt-12 sm:-mt-16 mb-6">
           <img
-            [src]="displayUser().avatarUrl"
-            [alt]="displayUser().name"
+            [src]="user.avatarUrl"
+            [alt]="user.name"
             class="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-white dark:border-zinc-800 object-cover shadow-md"
             referrerpolicy="no-referrer"
           >
@@ -25,12 +26,12 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 class="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-white flex items-center">
-              {{ displayUser().name }}
+              {{ user.name }}
             </h1>
             <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1 flex items-center">
               <mat-icon class="text-orange-500 mr-1" style="font-size: 18px; height: 18px; width: 18px;">star</mat-icon>
-              <span class="font-bold text-zinc-900 dark:text-white mr-1">{{ displayUser().rating | number:'1.1-1' }}</span>
-              ({{ displayUser().reviewCount }} opinii)
+              <span class="font-bold text-zinc-900 dark:text-white mr-1">{{ user.rating | number:'1.1-1' }}</span>
+              ({{ user.reviewCount }} opinii)
             </p>
           </div>
 
@@ -43,7 +44,7 @@
 
         <div class="mt-6">
           <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-2">O mnie</h3>
-          <p class="text-zinc-600 dark:text-zinc-300 leading-relaxed">{{ displayUser().description }}</p>
+          <p class="text-zinc-600 dark:text-zinc-300 leading-relaxed">{{ user.description }}</p>
         </div>
       </div>
     </div>
@@ -167,7 +168,7 @@
                   <div class="flex justify-between items-start mb-4 gap-2">
                     <div class="flex items-center min-w-0">
                       <img
-                        [src]="review.authorAvatar"
+                        [src]="review.authorAvatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + review.authorName"
                         [alt]="review.authorName"
                         class="w-10 h-10 rounded-full mr-3 border border-zinc-200 dark:border-zinc-600 flex-shrink-0"
                         referrerpolicy="no-referrer"
@@ -243,8 +244,8 @@
     </div>
   }
 
-  @if (displayUser()) {
-    <app-edit-profile-modal [(isOpen)]="isEditModalOpen" [user]="displayUser()"></app-edit-profile-modal>
+  @if (displayUser(); as validUser) {
+    <app-edit-profile-modal [(isOpen)]="isEditModalOpen" [user]="validUser"></app-edit-profile-modal>
     <app-listing-modal [(isOpen)]="isListingModalOpen" [listing]="editingListing"></app-listing-modal>
   }
 

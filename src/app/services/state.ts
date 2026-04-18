@@ -69,6 +69,22 @@ export class State {
     });
   }
 
+  // Prywatna metoda do wzbogacania koszyka o zdjęcia ogłoszeń
+  private enrichAndSetCart(cart: CartDto) {
+    if (!cart || !cart.items) {
+      this.cart.set(cart);
+      return;
+    }
+    const enrichedItems = cart.items.map(item => {
+      const listing = this.listings().find(l => l.id === item.listingId);
+      return {
+        ...item,
+        imageUrl: listing?.imageUrl
+      };
+    });
+    this.cart.set({ ...cart, items: enrichedItems });
+  }
+
   toggleTheme() {
     this.isDarkMode.update(v => !v);
     if (this.isDarkMode()) {
@@ -133,30 +149,30 @@ export class State {
     if (!isPlatformBrowser(this.platformId) || !this.currentUser()) return;
     this.http.get<CartDto>(`${this.apiUrl}/cart`).pipe(
       catchError(() => of({ items: [], totalPrice: 0 } as CartDto))
-    ).subscribe(cart => this.cart.set(cart));
+    ).subscribe(cart => this.enrichAndSetCart(cart));
   }
 
   addToCart(listingOrId: Listing | number, quantity: number = 1) {
     if (!this.currentUser()) { this.openAuthModal(); return; }
     const listingId = typeof listingOrId === 'number' ? listingOrId : listingOrId.id;
     const payload: AddToCartRequest = { listingId, quantity };
-    this.http.post<CartDto>(`${this.apiUrl}/cart/items/`, payload).subscribe(c => this.cart.set(c));
+    this.http.post<CartDto>(`${this.apiUrl}/cart/items/`, payload).subscribe(c => this.enrichAndSetCart(c));
   }
 
   removeFromCart(listingId: number) {
     if (!this.currentUser()) return;
-    this.http.delete<CartDto>(`${this.apiUrl}/cart/items/${listingId}`).subscribe(c => this.cart.set(c));
+    this.http.delete<CartDto>(`${this.apiUrl}/cart/items/${listingId}`).subscribe(c => this.enrichAndSetCart(c));
   }
 
   updateCartItemQuantity(listingId: number, quantity: number) {
     if (!this.currentUser() || quantity < 1) return;
     const payload: AddToCartRequest = { listingId, quantity };
-    this.http.put<CartDto>(`${this.apiUrl}/cart/items/`, payload).subscribe(c => this.cart.set(c));
+    this.http.put<CartDto>(`${this.apiUrl}/cart/items/`, payload).subscribe(c => this.enrichAndSetCart(c));
   }
 
   clearCart() {
     if (!this.currentUser()) return;
-    this.http.delete<CartDto>(`${this.apiUrl}/cart`).subscribe(c => this.cart.set(c));
+    this.http.delete<CartDto>(`${this.apiUrl}/cart`).subscribe(c => this.enrichAndSetCart(c));
   }
 
   updateUser(userId: number, data: Partial<User>) {
