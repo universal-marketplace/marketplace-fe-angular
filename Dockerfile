@@ -1,13 +1,13 @@
-FROM node:22
-
+FROM node:20 AS build
 WORKDIR /app
-
 COPY package*.json ./
-
 RUN npm install
-
 COPY . .
+RUN npm run build --configuration=production
 
-EXPOSE 4200
 
-CMD ["npm", "run", "start", "--", "--host", "0.0.0.0"]
+FROM nginx:alpine
+
+COPY --from=build /app/dist/universal-marketplace-fe/browser /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
