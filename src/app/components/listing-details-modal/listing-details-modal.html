@@ -1,9 +1,9 @@
-@if (state.selectedListing()) {
+@if (listingService.selectedListing()) {
   <!-- Backdrop -->
   <div
     class="fixed inset-0 z-[100] bg-zinc-900/50 backdrop-blur-sm transition-opacity"
-    (click)="state.closeListingDetails()"
-    (keydown.enter)="state.closeListingDetails()"
+    (click)="listingService.closeListingDetails()"
+    (keydown.enter)="listingService.closeListingDetails()"
     tabindex="0"
   ></div>
 
@@ -17,7 +17,7 @@
     <div class="flex items-center justify-between p-4 border-b border-zinc-100 dark:border-zinc-700">
       <h2 class="text-lg font-bold text-zinc-900 dark:text-white truncate pr-4">Szczegóły ogłoszenia</h2>
       <button
-        (click)="state.closeListingDetails()"
+        (click)="listingService.closeListingDetails()"
         class="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-500 dark:text-zinc-400 transition-colors"
       >
         <mat-icon>close</mat-icon>
@@ -27,17 +27,17 @@
     <!-- Content -->
     <div class="flex-1 overflow-y-auto p-4 sm:p-6">
       <img
-        [src]="state.selectedListing()?.imageUrl"
-        [alt]="state.selectedListing()?.title"
+        [src]="listingService.selectedListing()?.imageUrl"
+        [alt]="listingService.selectedListing()?.title"
         class="w-full h-48 sm:h-64 object-cover rounded-2xl mb-6"
         referrerpolicy="no-referrer"
       >
 
       <div class="flex flex-wrap gap-2 mb-4">
             <span class="px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 rounded-full text-xs font-bold uppercase tracking-wider">
-              {{ state.selectedListing()?.type === 'SERVICE' ? 'Usługa' : 'Przedmiot' }}
+              {{ listingService.selectedListing()?.type === 'SERVICE' ? 'Usługa' : 'Przedmiot' }}
             </span>
-        @for (tag of state.selectedListing()?.tags; track tag) {
+        @for (tag of listingService.selectedListing()?.tags; track tag) {
           <span class="px-3 py-1 bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-full text-xs font-medium">
                 {{ tag }}
               </span>
@@ -45,23 +45,44 @@
       </div>
 
       <h1 class="text-2xl font-bold text-zinc-900 dark:text-white mb-2">
-        {{ state.selectedListing()?.title }}
+        {{ listingService.selectedListing()?.title }}
       </h1>
 
       <div class="flex items-center justify-between mb-6">
-        <div class="text-2xl font-bold text-orange-500">
-          {{ state.selectedListing()?.price }} PLN
+        <div class="flex flex-col">
+          <div class="text-2xl font-bold text-orange-500">
+            {{ listingService.selectedListing()?.price }} PLN
+          </div>
+          @if (listingService.selectedListing()?.type === 'ITEM' && listingService.selectedListing()?.unitAmount !== undefined) {
+            <div class="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+              Dostępna ilość: {{ listingService.selectedListing()?.unitAmount }}
+            </div>
+          }
         </div>
 
-        @if (state.currentUser() && state.currentUser()?.id !== state.selectedListing()?.advertiserId) {
-          <button
-            (click)="addToCart()"
-            class="inline-flex items-center px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-xl shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-          >
-            <mat-icon class="mr-2" style="font-size: 20px; height: 20px; width: 20px;">add_shopping_cart</mat-icon>
-            Do koszyka
-          </button>
-        } @else if (state.currentUser()?.id === state.selectedListing()?.advertiserId) {
+        @if (authService.currentUser() && authService.currentUser()?.id !== listingService.selectedListing()?.advertiserId) {
+          <div class="flex flex-col gap-3 items-end">
+            @if (listingService.selectedListing()?.type === 'ITEM') {
+              <div class="flex items-center gap-2">
+                <label for="quantity" class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Ilość:</label>
+                <input type="number" id="quantity" name="quantity" min="1" [max]="listingService.selectedListing()?.unitAmount || 1" [(ngModel)]="quantity" class="w-20 bg-zinc-50 border border-zinc-300 text-zinc-900 text-sm rounded-xl focus:ring-orange-500 focus:border-orange-500 p-2 dark:bg-zinc-700 dark:border-zinc-600 dark:text-white">
+              </div>
+            } @else if (listingService.selectedListing()?.type === 'SERVICE') {
+              <div class="flex items-center gap-2">
+                <label for="bookingDate" class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Data:</label>
+                <input type="date" id="bookingDate" name="bookingDate" [(ngModel)]="bookingDate" class="bg-zinc-50 border border-zinc-300 text-zinc-900 text-sm rounded-xl focus:ring-orange-500 focus:border-orange-500 p-2 dark:bg-zinc-700 dark:border-zinc-600 dark:text-white" required>
+              </div>
+            }
+            <button
+              (click)="addToCart()"
+              [disabled]="listingService.selectedListing()?.type === 'SERVICE' && !bookingDate"
+              class="inline-flex items-center px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-xl shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <mat-icon class="mr-2" style="font-size: 20px; height: 20px; width: 20px;">add_shopping_cart</mat-icon>
+              Do koszyka
+            </button>
+          </div>
+        } @else if (authService.currentUser()?.id === listingService.selectedListing()?.advertiserId) {
           <span class="inline-flex items-center px-4 py-2 bg-zinc-100 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400 text-sm font-medium rounded-xl">
                 To twoje ogłoszenie
               </span>
@@ -71,7 +92,7 @@
       <div class="prose prose-zinc dark:prose-invert max-w-none mb-8">
         <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-2">Opis</h3>
         <p class="text-zinc-600 dark:text-zinc-300 whitespace-pre-line">
-          {{ state.selectedListing()?.description }}
+          {{ listingService.selectedListing()?.description }}
         </p>
       </div>
 
@@ -81,22 +102,22 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div class="flex items-center space-x-3">
             <img
-              [src]="state.selectedListing()?.advertiserAvatar"
-              [alt]="state.selectedListing()?.advertiserName"
+              [src]="listingService.selectedListing()?.advertiserAvatar"
+              [alt]="listingService.selectedListing()?.advertiserName"
               class="w-12 h-12 rounded-full object-cover"
               referrerpolicy="no-referrer"
             >
             <div>
-              <div class="font-medium text-zinc-900 dark:text-white">{{ state.selectedListing()?.advertiserName }}</div>
+              <div class="font-medium text-zinc-900 dark:text-white">{{ listingService.selectedListing()?.advertiserName }}</div>
               <div class="flex items-center text-sm text-zinc-500 dark:text-zinc-400">
                 <mat-icon class="text-orange-500 mr-1" style="font-size: 16px; height: 16px; width: 16px;">star</mat-icon>
-                {{ state.selectedListing()?.rating | number:'1.1-1' }} ({{ state.selectedListing()?.reviewCount }} opinii)
+                {{ listingService.selectedListing()?.rating | number:'1.1-1' }} ({{ listingService.selectedListing()?.reviewCount }} opinii)
               </div>
             </div>
           </div>
           <button
-            [routerLink]="['/profile', state.selectedListing()?.advertiserId]"
-            (click)="state.closeListingDetails()"
+            [routerLink]="['/profile', listingService.selectedListing()?.advertiserId]"
+            (click)="listingService.closeListingDetails()"
             class="w-full sm:w-auto px-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 text-sm font-medium rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors text-center"
           >
             Zobacz profil

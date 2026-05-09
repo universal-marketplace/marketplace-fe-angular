@@ -1,5 +1,5 @@
 import {Component, EventEmitter, inject, Input, OnChanges, Output} from '@angular/core';
-import {State} from '../../services/state';
+import {AuthService} from '../../features/auth/services/auth.service';
 import {User} from '../../models';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
@@ -13,7 +13,7 @@ import {MatIconModule} from '@angular/material/icon';
   styleUrl: './edit-profile-modal.css',
 })
 export class EditProfileModal implements OnChanges {
-  state = inject(State);
+  auth = inject(AuthService);
 
   @Input() isOpen = false;
   @Output() isOpenChange = new EventEmitter<boolean>();
@@ -34,8 +34,9 @@ export class EditProfileModal implements OnChanges {
 
   save() {
     if (this.user) {
-      this.state.updateUser(this.user.id, this.editData);
-      this.close();
+      this.auth.updateUser(this.editData).subscribe(() => {
+        this.close();
+      });
     }
   }
 }

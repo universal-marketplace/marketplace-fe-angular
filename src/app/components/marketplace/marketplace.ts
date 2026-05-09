@@ -1,5 +1,6 @@
 import {Component, inject} from '@angular/core';
-import {State} from '../../services/state';
+import { ListingService } from '../../features/marketplace/services/listing.service';
+import { UIService } from '../../core/services/ui.service';
 import {CommonModule} from '@angular/common';
 import {MatIconModule} from '@angular/material/icon';
 import {ListingCard} from '../listing-card/listing-card';
@@ -12,5 +13,6 @@ import {ListingCard} from '../listing-card/listing-card';
   styleUrl: './marketplace.css',
 })
 export class Marketplace {
-  state = inject(State);
+  listingService = inject(ListingService);
+  ui = inject(UIService);
 }

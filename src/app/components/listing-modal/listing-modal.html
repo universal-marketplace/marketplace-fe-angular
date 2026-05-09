@@ -54,6 +54,13 @@
               }
             </div>
 
+            @if (formData.type === 'ITEM') {
+              <div>
+                <label for="unitAmount" class="block mb-1.5 text-sm font-medium text-zinc-900 dark:text-white">Ilość sztuk na stanie</label>
+                <input id="unitAmount" type="number" min="1" step="1" name="unitAmount" [(ngModel)]="formData.unitAmount" required class="bg-zinc-50 border border-zinc-300 text-zinc-900 text-sm rounded-xl focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5 dark:bg-zinc-700 dark:border-zinc-600 dark:placeholder-zinc-400 dark:text-white dark:focus:ring-orange-500 dark:focus:border-orange-500">
+              </div>
+            }
+
             <div>
               <label for="imageUrl" class="block mb-1.5 text-sm font-medium text-zinc-900 dark:text-white">Adres URL zdjęcia</label>
               <input id="imageUrl" type="url" name="imageUrl" [(ngModel)]="formData.imageUrl" required class="bg-zinc-50 border border-zinc-300 text-zinc-900 text-sm rounded-xl focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5 dark:bg-zinc-700 dark:border-zinc-600 dark:placeholder-zinc-400 dark:text-white dark:focus:ring-orange-500 dark:focus:border-orange-500">

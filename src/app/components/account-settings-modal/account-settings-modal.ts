@@ -1,6 +1,7 @@
 import {Component, EventEmitter, inject, Input, Output} from '@angular/core';
 import {User} from '../../models';
-import {State} from '../../services/state';
+import {AuthService} from '../../features/auth/services/auth.service';
+import {UIService} from '../../core/services/ui.service';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {MatIconModule} from '@angular/material/icon';
@@ -25,7 +26,8 @@ export class AccountSettingsModal {
   }
   @Output() isOpenChange = new EventEmitter<boolean>();
 
-  state = inject(State);
+  auth = inject(AuthService);
+  ui = inject(UIService);
 
   private _user: User | null = null;
 
@@ -101,13 +103,17 @@ export class AccountSettingsModal {
     }
 
     if (hasChanges) {
-      this.state.updateUser(this.user.id, updates);
-      this.successMessage = 'Zmiany zostały zapisane pomyślnie.';
-
-      // Reset form fields but keep modal open to show success message
-      setTimeout(() => {
-        this.close();
-      }, 2000);
+      this.auth.updateUser(updates).subscribe(updatedUser => {
+        if (updatedUser) {
+          this.successMessage = 'Zmiany zostały zapisane pomyślnie.';
+          // Reset form fields but keep modal open to show success message
+          setTimeout(() => {
+            this.close();
+          }, 2000);
+        } else {
+          this.errorMessage = 'Wystąpił błąd podczas zapisywania zmian.';
+        }
+      });
     }
   }
 }

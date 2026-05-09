@@ -1,272 +1,431 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-  <!-- Używamy aliasu 'user', aby TypeScript wiedział, że obiekt nie jest undefined -->
-  @if (displayUser(); as user) {
-    <!-- Profile Header -->
-    <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-sm border border-zinc-100 dark:border-zinc-700 overflow-hidden mb-8">
-      <div class="h-32 bg-gradient-to-r from-orange-400 to-orange-600"></div>
-      <div class="px-6 sm:px-8 pb-8">
-        <div class="relative flex justify-between items-end -mt-12 sm:-mt-16 mb-6">
+  <div class="flex flex-col lg:flex-row gap-8">
+
+    <!-- Profile Info Sidebar -->
+    <aside class="w-full lg:w-80 flex-shrink-0">
+      <div class="bg-white dark:bg-zinc-800 rounded-3xl p-6 shadow-sm border border-zinc-100 dark:border-zinc-700 text-center lg:sticky lg:top-24">
+        <div class="relative inline-block mb-4">
           <img
-            [src]="user.avatarUrl"
-            [alt]="user.name"
-            class="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-white dark:border-zinc-800 object-cover shadow-md"
+            [src]="displayUser()?.avatarUrl"
+            [alt]="displayUser()?.name"
+            class="w-32 h-32 rounded-full object-cover border-4 border-orange-50 dark:border-zinc-700 shadow-md"
             referrerpolicy="no-referrer"
           >
           @if (isOwnProfile()) {
             <button
               (click)="isEditModalOpen = true"
-              class="inline-flex items-center px-4 py-2 border border-zinc-300 dark:border-zinc-600 rounded-xl shadow-sm text-sm font-medium text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 focus:outline-none transition-colors"
+              class="absolute bottom-0 right-0 p-2 bg-orange-500 text-white rounded-full shadow-lg hover:bg-orange-600 transition-colors border-2 border-white dark:border-zinc-800"
+              aria-label="Edytuj profil"
             >
-              <mat-icon class="mr-2 text-zinc-500">edit</mat-icon>
-              Edytuj Profil
+              <mat-icon style="font-size: 18px; width: 18px; height: 18px;">edit</mat-icon>
             </button>
           }
         </div>
 
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-white flex items-center">
-              {{ user.name }}
-            </h1>
-            <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1 flex items-center">
-              <mat-icon class="text-orange-500 mr-1" style="font-size: 18px; height: 18px; width: 18px;">star</mat-icon>
-              <span class="font-bold text-zinc-900 dark:text-white mr-1">{{ user.rating | number:'1.1-1' }}</span>
-              ({{ user.reviewCount }} opinii)
-            </p>
-          </div>
-
-          <div class="flex gap-3">
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
-                  Użytkownik
-                </span>
-          </div>
+        <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-1">{{ displayUser()?.name }}</h2>
+        <div class="flex items-center justify-center text-orange-500 font-bold mb-4">
+          <mat-icon class="mr-1" style="font-size: 20px; width: 20px; height: 20px;">star</mat-icon>
+          <span>{{ displayUser()?.rating | number:'1.1-1' }}</span>
+          <span class="text-zinc-400 dark:text-zinc-500 font-medium ml-1">({{ displayUser()?.reviewCount }} opinii)</span>
         </div>
 
-        <div class="mt-6">
-          <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-2">O mnie</h3>
-          <p class="text-zinc-600 dark:text-zinc-300 leading-relaxed">{{ user.description }}</p>
+        <div class="bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl p-4 text-left border border-zinc-100 dark:border-zinc-700 mb-6">
+          <h3 class="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-2">O mnie</h3>
+          <p class="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed italic">
+            {{ displayUser()?.description || 'Brak opisu.' }}
+          </p>
         </div>
+
+        @if (isOwnProfile()) {
+          <button
+            (click)="openAddListingModal()"
+            class="w-full flex items-center justify-center px-4 py-3 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-bold rounded-2xl hover:bg-zinc-800 dark:hover:bg-white transition-all shadow-sm"
+          >
+            <mat-icon class="mr-2">add_circle</mat-icon>
+            Dodaj Ogłoszenie
+          </button>
+        }
       </div>
-    </div>
+    </aside>
 
-    <!-- Content Tabs -->
-    <div class="flex flex-col lg:flex-row gap-8">
+    <!-- Main Content -->
+    <main class="flex-1">
+      <!-- Tabs -->
+      <div class="flex space-x-1 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-2xl mb-6 border border-zinc-200 dark:border-zinc-700">
+        <button
+          (click)="activeTab.set('listings')"
+          [class.bg-white]="activeTab() === 'listings'"
+          [class.dark:bg-zinc-700]="activeTab() === 'listings'"
+          [class.text-orange-600]="activeTab() === 'listings'"
+          [class.shadow-sm]="activeTab() === 'listings'"
+          class="flex-1 py-2.5 text-sm font-bold rounded-xl transition-all"
+        >
+          Ogłoszenia
+        </button>
+        <button
+          (click)="activeTab.set('reviews')"
+          [class.bg-white]="activeTab() === 'reviews'"
+          [class.dark:bg-zinc-700]="activeTab() === 'reviews'"
+          [class.text-orange-600]="activeTab() === 'reviews'"
+          [class.shadow-sm]="activeTab() === 'reviews'"
+          class="flex-1 py-2.5 text-sm font-bold rounded-xl transition-all"
+        >
+          Opinie
+        </button>
+        @if (isOwnProfile()) {
+          <button
+            (click)="activeTab.set('purchases')"
+            [class.bg-white]="activeTab() === 'purchases'"
+            [class.dark:bg-zinc-700]="activeTab() === 'purchases'"
+            [class.text-orange-600]="activeTab() === 'purchases'"
+            [class.shadow-sm]="activeTab() === 'purchases'"
+            class="flex-1 py-2.5 text-sm font-bold rounded-xl transition-all"
+          >
+            Zakupy
+          </button>
+          <button
+            (click)="activeTab.set('sales')"
+            [class.bg-white]="activeTab() === 'sales'"
+            [class.dark:bg-zinc-700]="activeTab() === 'sales'"
+            [class.text-orange-600]="activeTab() === 'sales'"
+            [class.shadow-sm]="activeTab() === 'sales'"
+            class="flex-1 py-2.5 text-sm font-bold rounded-xl transition-all"
+          >
+            Sprzedaż
+          </button>
+        }
+      </div>
 
-      <!-- Main Content Area -->
-      <div class="flex-1">
-        <div class="mb-8">
-          <div class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-bold text-zinc-900 dark:text-white flex items-center">
-              <mat-icon class="mr-2 text-orange-500">local_offer</mat-icon>
-              Moje Ogłoszenia
-            </h2>
-            @if (isOwnProfile()) {
-              <button
-                (click)="openAddListingModal()"
-                class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-xl shadow-sm text-white bg-orange-500 hover:bg-orange-600 focus:outline-none transition-colors"
-              >
-                <mat-icon style="font-size: 18px; height: 18px; width: 18px;" class="mr-1">add</mat-icon>
-                Dodaj
-              </button>
-            }
-          </div>
-          @if (listings().length > 0) {
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
-              @for (listing of listings(); track listing.id) {
-                <div class="relative group h-full">
-                  <app-listing-card class="block h-full" [listing]="listing" viewMode="grid"></app-listing-card>
-                  @if (isOwnProfile()) {
-                    <div class="absolute top-2 left-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                      <button
-                        (click)="openEditListingModal(listing)"
-                        class="p-1.5 bg-white dark:bg-zinc-800 rounded-lg shadow-sm text-zinc-600 dark:text-zinc-300 hover:text-orange-500 dark:hover:text-orange-400 border border-zinc-200 dark:border-zinc-700 transition-colors"
-                        title="Edytuj"
-                      >
-                        <mat-icon style="font-size: 16px; height: 16px; width: 16px;">edit</mat-icon>
-                      </button>
-                      <button
-                        (click)="deleteListing(listing.id)"
-                        class="p-1.5 bg-white dark:bg-zinc-800 rounded-lg shadow-sm text-zinc-600 dark:text-zinc-300 hover:text-red-500 dark:hover:text-red-400 border border-zinc-200 dark:border-zinc-700 transition-colors"
-                        title="Usuń"
-                      >
-                        <mat-icon style="font-size: 16px; height: 16px; width: 16px;">delete</mat-icon>
-                      </button>
-                    </div>
-                  }
-                </div>
-              }
-            </div>
-          } @else {
-            <div class="text-center py-12 bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-100 dark:border-zinc-700 border-dashed">
-              <p class="text-zinc-500 dark:text-zinc-400">Ten użytkownik nie ma jeszcze żadnych ogłoszeń.</p>
-            </div>
-          }
-        </div>
-
-        <!-- Reviews Section -->
-        <div>
-          <h2 class="text-xl font-bold text-zinc-900 dark:text-white mb-6 flex items-center">
-            <mat-icon class="mr-2 text-orange-500">forum</mat-icon>
-            Opinie ({{ reviews().length }})
-          </h2>
-
-          <!-- Add Review Form -->
-          @if (state.currentUser() && !isOwnProfile()) {
-            <div class="bg-white dark:bg-zinc-800 rounded-2xl p-6 shadow-sm border border-zinc-100 dark:border-zinc-700 mb-6">
-              <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">Dodaj opinię</h3>
-              <form (ngSubmit)="submitReview()" class="space-y-4">
-                <div>
-                  <div class="block mb-2 text-sm font-medium text-zinc-900 dark:text-white" id="rating-label">Ocena</div>
-                  <div class="flex items-center space-x-1" aria-labelledby="rating-label">
-                    @for (star of [1,2,3,4,5]; track star) {
-                      <button
-                        type="button"
-                        (click)="newReview.rating = star"
-                        (mouseenter)="hoverRating = star"
-                        (mouseleave)="hoverRating = 0"
-                        class="focus:outline-none transition-colors"
-                      >
-                        <mat-icon
-                          class="text-orange-500"
-                          style="font-size: 28px; height: 28px; width: 28px;"
-                        >
-                          {{ star <= (hoverRating || newReview.rating) ? 'star' : 'star_border' }}
-                        </mat-icon>
-                      </button>
-                    }
-                  </div>
-                </div>
-                <div>
-                  <label for="review-comment" class="block mb-1.5 text-sm font-medium text-zinc-900 dark:text-white">Twój komentarz</label>
-                  <textarea
-                    id="review-comment"
-                    name="comment"
-                    [(ngModel)]="newReview.comment"
-                    rows="3"
-                    required
-                    placeholder="Podziel się swoimi wrażeniami..."
-                    class="bg-zinc-50 border border-zinc-300 text-zinc-900 text-sm rounded-xl focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5 dark:bg-zinc-700 dark:border-zinc-600 dark:placeholder-zinc-400 dark:text-white dark:focus:ring-orange-500 dark:focus:border-orange-500"
-                  ></textarea>
-                </div>
-                <div class="flex justify-end">
-                  <button
-                    type="submit"
-                    [disabled]="!newReview.comment.trim()"
-                    class="text-white bg-orange-500 hover:bg-orange-600 focus:ring-4 focus:outline-none focus:ring-orange-300 font-medium rounded-xl text-sm px-5 py-2.5 text-center dark:bg-orange-600 dark:hover:bg-orange-700 dark:focus:ring-orange-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Opublikuj opinię
+      <!-- Listings Tab -->
+      @if (activeTab() === 'listings') {
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 animate-fade-in">
+          @for (listing of listings(); track listing.id) {
+            <div class="relative group">
+              <app-listing-card [listing]="listing"></app-listing-card>
+              @if (isOwnProfile()) {
+                <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button (click)="openEditListingModal(listing)" class="p-2 bg-white/90 backdrop-blur shadow-sm rounded-lg text-zinc-600 hover:text-orange-500">
+                    <mat-icon style="font-size: 18px; width: 18px; height: 18px;">edit</mat-icon>
+                  </button>
+                  <button (click)="deleteListing(listing.id)" class="p-2 bg-white/90 backdrop-blur shadow-sm rounded-lg text-zinc-600 hover:text-red-500">
+                    <mat-icon style="font-size: 18px; width: 18px; height: 18px;">delete</mat-icon>
                   </button>
                 </div>
-              </form>
+              }
+            </div>
+          }
+          @if (listings().length === 0) {
+            <div class="col-span-full py-12 text-center bg-white dark:bg-zinc-800 rounded-3xl border border-zinc-100 dark:border-zinc-700 border-dashed">
+              <mat-icon class="text-zinc-300 dark:text-zinc-600 mb-2" style="font-size: 48px; width: 48px; height: 48px;">inventory</mat-icon>
+              <p class="text-zinc-500 dark:text-zinc-400 italic">Brak aktywnych ogłoszeń.</p>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Reviews Tab -->
+      @if (activeTab() === 'reviews') {
+        <div class="space-y-6 animate-fade-in">
+          <!-- Add Review (only on other's profile) -->
+          @if (!isOwnProfile() && authService.currentUser()) {
+            <div class="bg-white dark:bg-zinc-800 p-6 rounded-3xl shadow-sm border border-orange-100 dark:border-orange-900/30">
+              <h3 class="font-bold text-zinc-900 dark:text-white mb-4">Wystaw opinię</h3>
+              <div class="flex items-center gap-2 mb-4">
+                @for (star of [1,2,3,4,5]; track star) {
+                  <button 
+                    (click)="newReview.rating = star"
+                    (mouseenter)="hoverRating = star"
+                    (mouseleave)="hoverRating = 0"
+                    class="focus:outline-none transition-transform hover:scale-110"
+                  >
+                    <mat-icon [class.text-orange-500]="(hoverRating || newReview.rating) >= star" class="text-zinc-200 dark:text-zinc-700">star</mat-icon>
+                  </button>
+                }
+              </div>
+              <textarea 
+                [(ngModel)]="newReview.comment"
+                placeholder="Napisz kilka słów o współpracy..."
+                class="w-full bg-zinc-50 dark:bg-zinc-900 border-0 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-orange-500 mb-4 h-24 transition-all"
+              ></textarea>
+              <button 
+                (click)="submitReview()"
+                [disabled]="!newReview.comment.trim()"
+                class="px-6 py-2.5 bg-orange-500 text-white font-bold rounded-xl hover:bg-orange-600 disabled:opacity-50 transition-colors"
+              >
+                Dodaj opinię
+              </button>
             </div>
           }
 
-          @if (reviews().length > 0) {
-            <div class="space-y-6">
-              @for (review of reviews(); track review.id) {
-                <div class="bg-white dark:bg-zinc-800 rounded-2xl p-6 shadow-sm border border-zinc-100 dark:border-zinc-700">
-                  <div class="flex justify-between items-start mb-4 gap-2">
-                    <div class="flex items-center min-w-0">
-                      <img
-                        [src]="review.authorAvatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + review.authorName"
-                        [alt]="review.authorName"
-                        class="w-10 h-10 rounded-full mr-3 border border-zinc-200 dark:border-zinc-600 flex-shrink-0"
-                        referrerpolicy="no-referrer"
-                      >
-                      <div class="min-w-0">
-                        <div class="font-medium text-zinc-900 dark:text-white truncate">{{ review.authorName }}</div>
-                        <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ review.date | date }}</div>
-                      </div>
-                    </div>
-                    <div class="flex items-center text-orange-500 flex-shrink-0">
-                      @for (star of [1,2,3,4,5]; track star) {
-                        <mat-icon style="font-size: 18px; height: 18px; width: 18px;">
-                          {{ star <= review.rating ? 'star' : 'star_border' }}
-                        </mat-icon>
-                      }
-                    </div>
+          @for (review of reviews(); track review.id) {
+            <div class="bg-white dark:bg-zinc-800 p-6 rounded-3xl shadow-sm border border-zinc-100 dark:border-zinc-700">
+              <div class="flex items-start justify-between mb-4">
+                <div class="flex items-center gap-3">
+                  <img [src]="review.authorAvatar" class="w-10 h-10 rounded-full border border-zinc-100 dark:border-zinc-700">
+                  <div>
+                    <div class="font-bold text-zinc-900 dark:text-white text-sm">{{ review.authorName }}</div>
+                    <div class="text-[10px] text-zinc-400">{{ review.date | date:'longDate' }}</div>
                   </div>
-                  <p class="text-zinc-600 dark:text-zinc-300">{{ review.comment }}</p>
-
-                  <!-- Reply Section -->
-                  @if (review.replies && review.replies.length > 0) {
-                    <div class="space-y-4 mb-4">
-                      @for (reply of review.replies; track reply.id) {
-                        <div class="ml-8 p-4 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-zinc-100 dark:border-zinc-800 relative">
-                          <div class="absolute -left-3 top-6 w-3 h-px bg-zinc-300 dark:bg-zinc-700"></div>
-                          <div class="absolute -left-3 top-2 bottom-6 w-px bg-zinc-300 dark:bg-zinc-700"></div>
-                          <div class="flex items-center mb-2">
-                            <img [src]="reply.authorAvatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + reply.authorName" [alt]="reply.authorName" class="w-6 h-6 rounded-full mr-2" referrerpolicy="no-referrer">
-                            <span class="text-sm font-medium text-zinc-900 dark:text-white">Odpowiedź od {{ reply.authorName }}</span>
-                            <span class="text-xs text-zinc-500 dark:text-zinc-400 ml-2">{{ reply.createdAt | date:'short' }}</span>
-                          </div>
-                          <p class="text-sm text-zinc-600 dark:text-zinc-300">{{ reply.comment }}</p>
-                        </div>
-                      }
-                    </div>
+                </div>
+                <div class="flex text-orange-500">
+                  @for (s of [1,2,3,4,5]; track s) {
+                    <mat-icon style="font-size: 16px; width: 16px; height: 16px;">{{ review.rating >= s ? 'star' : 'star_border' }}</mat-icon>
                   }
-
-                  @if (state.currentUser()) {
-                    <div class="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-700">
-                      @if (replyingTo === review.id) {
-                        <div class="flex flex-col gap-2">
-                          <textarea [(ngModel)]="replyText" placeholder="Napisz kolejną odpowiedź..." rows="2" class="w-full bg-zinc-50 border border-zinc-300 text-zinc-900 text-sm rounded-xl focus:ring-orange-500 focus:border-orange-500 block p-2.5 dark:bg-zinc-700 dark:border-zinc-600 dark:placeholder-zinc-400 dark:text-white dark:focus:ring-orange-500 dark:focus:border-orange-500"></textarea>
-                          <div class="flex justify-end gap-2">
-                            <button (click)="replyingTo = null; replyText = ''" class="px-4 py-2 bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300 text-sm font-medium rounded-xl hover:bg-zinc-300 dark:hover:bg-zinc-600 transition-colors">Anuluj</button>
-                            <button (click)="submitReply(review.id)" [disabled]="!replyText.trim()" class="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-xl hover:bg-orange-600 disabled:opacity-50 transition-colors">Wyślij odpowiedź</button>
-                          </div>
-                        </div>
-                      } @else {
-                        <button (click)="replyingTo = review.id" class="text-sm text-orange-500 hover:text-orange-600 font-medium flex items-center transition-colors">
-                          <mat-icon style="font-size: 16px; height: 16px; width: 16px;" class="mr-1">reply</mat-icon>
-                          {{ (review.replies && review.replies.length > 0) ? 'Odpowiedz ponownie' : 'Odpowiedz' }}
-                        </button>
-                      }
+                </div>
+              </div>
+              <p class="text-zinc-600 dark:text-zinc-300 text-sm leading-relaxed mb-4">{{ review.comment }}</p>
+              
+              <!-- Replies -->
+              @if (review.replies && review.replies.length > 0) {
+                <div class="ml-6 mt-4 space-y-4 border-l-2 border-orange-100 dark:border-orange-900/30 pl-4">
+                  @for (reply of review.replies; track reply.id) {
+                    <div class="bg-zinc-50 dark:bg-zinc-900/30 p-3 rounded-2xl">
+                      <div class="flex items-center gap-2 mb-1">
+                        <img [src]="reply.authorAvatar" class="w-5 h-5 rounded-full">
+                        <span class="text-xs font-bold">{{ reply.authorName }}</span>
+                      </div>
+                      <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ reply.comment }}</p>
                     </div>
                   }
                 </div>
               }
+
+              <!-- Reply button (only for own profile) -->
+              @if (isOwnProfile() && !replyingTo) {
+                <button (click)="replyingTo = review.id" class="mt-4 text-xs font-bold text-orange-500 hover:text-orange-600 flex items-center">
+                  <mat-icon class="mr-1" style="font-size: 14px; width: 14px; height: 14px;">reply</mat-icon>
+                  Odpowiedz
+                </button>
+              }
+
+              @if (replyingTo === review.id) {
+                <div class="mt-4">
+                  <textarea [(ngModel)]="replyText" placeholder="Twoja odpowiedź..." class="w-full bg-zinc-50 dark:bg-zinc-900 border-0 rounded-xl p-3 text-xs focus:ring-1 focus:ring-orange-500 mb-2"></textarea>
+                  <div class="flex gap-2">
+                    <button (click)="submitReply(review.id)" class="px-4 py-1.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-bold rounded-lg hover:opacity-90">Wyślij</button>
+                    <button (click)="replyingTo = null; replyText = ''" class="px-4 py-1.5 bg-zinc-200 dark:bg-zinc-700 text-xs font-bold rounded-lg hover:opacity-90">Anuluj</button>
+                  </div>
+                </div>
+              }
             </div>
-          } @else {
-            <div class="text-center py-12 bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-100 dark:border-zinc-700 border-dashed">
-              <p class="text-zinc-500 dark:text-zinc-400">Brak opinii dla tego użytkownika.</p>
+          }
+          
+          @if (reviews().length === 0) {
+            <div class="py-12 text-center bg-white dark:bg-zinc-800 rounded-3xl border border-zinc-100 dark:border-zinc-700 border-dashed">
+              <mat-icon class="text-zinc-300 dark:text-zinc-600 mb-2" style="font-size: 48px; width: 48px; height: 48px;">rate_review</mat-icon>
+              <p class="text-zinc-500 dark:text-zinc-400 italic">Brak opinii o tym użytkowniku.</p>
             </div>
           }
         </div>
-      </div>
+      }
 
-    </div>
-  } @else {
-    <div class="text-center py-20">
-      <mat-icon class="text-zinc-400 dark:text-zinc-600 mb-4" style="font-size: 64px; height: 64px; width: 64px;">error_outline</mat-icon>
-      <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-2">Nie znaleziono użytkownika</h2>
-      <p class="text-zinc-500 dark:text-zinc-400">Profil, którego szukasz, nie istnieje lub został usunięty.</p>
-    </div>
-  }
+      <!-- Purchases Tab -->
+      @if (activeTab() === 'purchases') {
+        <div class="space-y-4 animate-fade-in">
+          @for (order of buyerOrders(); track order.id) {
+            <div class="bg-white dark:bg-zinc-800 p-6 rounded-3xl shadow-sm border border-zinc-100 dark:border-zinc-700">
+              <div class="flex justify-between items-start mb-4">
+                <div>
+                  <div class="text-xs text-zinc-400 mb-1">Zamówienie #{{ order.id }}</div>
+                  <div class="text-lg font-bold text-zinc-900 dark:text-white">{{ order.createdAt | date:'medium' }}</div>
+                </div>
+                <div 
+                  class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                  [ngClass]="{
+                    'bg-orange-100 text-orange-700': order.status === 'PENDING',
+                    'bg-blue-100 text-blue-700': order.status === 'SHIPPED',
+                    'bg-green-100 text-green-700': order.status === 'COMPLETED' || order.status === 'READY_FOR_PICKUP',
+                    'bg-red-100 text-red-700': order.status === 'CANCELLED'
+                  }"
+                >
+                  {{ order.status }}
+                </div>
+              </div>
+              
+              <div class="border-t border-zinc-50 dark:border-zinc-700/50 pt-4 mb-4">
+                @for (item of order.items; track item.listingId) {
+                  <div class="flex justify-between items-center mb-2">
+                    <div class="flex flex-col">
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm text-zinc-600 dark:text-zinc-300">{{ item.title }} x{{ item.quantity }}</span>
+                        <span 
+                          class="px-1.5 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-tighter"
+                          [ngClass]="(item.type === 'ITEM' || (!item.type && !item.bookingDate)) ? 'bg-zinc-100 text-zinc-600' : 'bg-orange-100 text-orange-600'"
+                        >
+                          {{ (item.type === 'ITEM' || (!item.type && !item.bookingDate)) ? 'Produkt' : 'Usługa' }}
+                        </span>
+                      </div>
+                      @if (item.bookingDate) {
+                        <span class="text-[10px] text-orange-500 font-medium">Termin: {{ item.bookingDate | date:'longDate' }}</span>
+                      }
+                    </div>
+                    <span class="text-sm font-bold">{{ item.unitPrice }} PLN</span>
+                  </div>
+                }
+              </div>
 
-  @if (displayUser(); as validUser) {
-    <app-edit-profile-modal [(isOpen)]="isEditModalOpen" [user]="validUser"></app-edit-profile-modal>
-    <app-listing-modal [(isOpen)]="isListingModalOpen" [listing]="editingListing"></app-listing-modal>
-  }
-
-  <!-- Delete Confirmation Modal -->
-  @if (listingToDelete) {
-    <div class="fixed inset-0 z-[110] flex items-center justify-center overflow-y-auto overflow-x-hidden bg-zinc-900/50 backdrop-blur-sm transition-opacity">
-      <div class="relative w-full max-w-md p-4 h-full md:h-auto">
-        <div class="relative bg-white dark:bg-zinc-800 rounded-2xl shadow-xl border border-zinc-100 dark:border-zinc-700 overflow-hidden p-6 text-center">
-          <mat-icon class="text-red-500 mb-4 mx-auto" style="font-size: 48px; height: 48px; width: 48px;">warning</mat-icon>
-          <h3 class="mb-5 text-lg font-normal text-zinc-900 dark:text-white">Czy na pewno chcesz usunąć to ogłoszenie?</h3>
-          <p class="mb-6 text-sm text-zinc-500 dark:text-zinc-400">Tej operacji nie można cofnąć.</p>
-          <div class="flex justify-center gap-3">
-            <button (click)="listingToDelete = null" class="text-zinc-700 bg-white hover:bg-zinc-50 focus:ring-4 focus:outline-none focus:ring-zinc-200 rounded-xl border border-zinc-200 text-sm font-medium px-5 py-2.5 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-600 dark:hover:bg-zinc-700 transition-colors">
-              Anuluj
-            </button>
-            <button (click)="confirmDelete()" class="text-white bg-red-500 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-xl text-sm px-5 py-2.5 transition-colors">
-              Tak, usuń
-            </button>
-          </div>
+              <div class="flex justify-between items-center">
+                <div class="flex-1">
+                  <div class="text-xs text-zinc-500 italic">
+                    Metoda: {{ order.deliveryMethod === 'SHIPPING' ? 'Wysyłka' : 'Odbiór osobisty' }}
+                  </div>
+                  @if (order.trackingNumber) {
+                    <div class="mt-1 text-xs font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded-lg inline-block">
+                      Nr paczki: {{ order.trackingNumber }}
+                    </div>
+                  }
+                </div>
+                <div class="text-lg font-bold text-orange-500">Suma: {{ order.totalPrice }} PLN</div>
+              </div>
+            </div>
+          }
+          @if (buyerOrders().length === 0) {
+            <div class="py-12 text-center bg-white dark:bg-zinc-800 rounded-3xl border border-zinc-100 dark:border-zinc-700 border-dashed">
+              <mat-icon class="text-zinc-300 dark:text-zinc-600 mb-2" style="font-size: 48px; width: 48px; height: 48px;">shopping_bag</mat-icon>
+              <p class="text-zinc-500 dark:text-zinc-400 italic">Nie dokonałeś jeszcze żadnych zakupów.</p>
+            </div>
+          }
         </div>
+      }
+
+      <!-- Sales Tab -->
+      @if (activeTab() === 'sales') {
+        <div class="space-y-4 animate-fade-in">
+          @for (order of sellerOrders(); track order.id) {
+            <div class="bg-white dark:bg-zinc-800 p-6 rounded-3xl shadow-sm border border-zinc-100 dark:border-zinc-700">
+              <div class="flex justify-between items-start mb-4">
+                <div>
+                  <div class="text-xs text-zinc-400 mb-1">Zamówienie #{{ order.id }}</div>
+                  <div class="text-lg font-bold text-zinc-900 dark:text-white">{{ order.createdAt | date:'medium' }}</div>
+                </div>
+                <div 
+                  class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                  [ngClass]="{
+                    'bg-orange-100 text-orange-700': order.status === 'PENDING',
+                    'bg-blue-100 text-blue-700': order.status === 'SHIPPED',
+                    'bg-green-100 text-green-700': order.status === 'COMPLETED' || order.status === 'READY_FOR_PICKUP',
+                    'bg-red-100 text-red-700': order.status === 'CANCELLED'
+                  }"
+                >
+                  {{ order.status }}
+                </div>
+              </div>
+
+              <div class="border-t border-zinc-50 dark:border-zinc-700/50 pt-4 mb-4">
+                @for (item of order.items; track item.listingId) {
+                  <div class="flex justify-between items-center mb-2">
+                    <div class="flex flex-col">
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm text-zinc-600 dark:text-zinc-300">{{ item.title }} x{{ item.quantity }}</span>
+                        <span 
+                          class="px-1.5 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-tighter"
+                          [ngClass]="(item.type === 'ITEM' || (!item.type && !item.bookingDate)) ? 'bg-zinc-100 text-zinc-600' : 'bg-orange-100 text-orange-600'"
+                        >
+                          {{ (item.type === 'ITEM' || (!item.type && !item.bookingDate)) ? 'Produkt' : 'Usługa' }}
+                        </span>
+                      </div>
+                      @if (item.bookingDate) {
+                        <span class="text-[10px] text-orange-500 font-medium">Termin: {{ item.bookingDate | date:'longDate' }}</span>
+                      }
+                    </div>
+                    <span class="text-sm font-bold">{{ item.unitPrice }} PLN</span>
+                  </div>
+                }
+              </div>
+
+              <div class="flex justify-between items-end">
+                <div class="flex-1">
+                  <div class="text-xs text-zinc-500 italic mb-2">
+                    Metoda: {{ order.deliveryMethod === 'SHIPPING' ? 'Wysyłka' : 'Odbiór osobisty' }}
+                  </div>
+                  
+                  <!-- Tracking Number Input (Only for PENDING shipping orders) -->
+                  @if (order.status === 'PENDING' && order.deliveryMethod === 'SHIPPING') {
+                    <div class="max-w-xs mb-2">
+                      <input 
+                        type="text" 
+                        [(ngModel)]="trackingInputs[order.id]" 
+                        placeholder="Wpisz nr paczki..." 
+                        class="w-full px-3 py-1.5 text-xs border border-zinc-200 dark:border-zinc-600 dark:bg-zinc-900 rounded-lg focus:ring-1 focus:ring-orange-500 outline-none text-zinc-900 dark:text-white"
+                      >
+                    </div>
+                  } @else if (order.trackingNumber) {
+                    <div class="text-xs font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg inline-block">
+                      Nr paczki: {{ order.trackingNumber }}
+                    </div>
+                  }
+                </div>
+                
+                <div class="flex gap-2">
+                  @if (order.status === 'PENDING') {
+                    @if (order.deliveryMethod === 'SHIPPING') {
+                      <button 
+                        (click)="updateStatus(order.id, 'SHIPPED', trackingInputs[order.id])"
+                        [disabled]="!trackingInputs[order.id]"
+                        class="px-4 py-2 bg-blue-500 text-white text-xs font-bold rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-50"
+                      >
+                        Wyślij
+                      </button>
+                    } @else {
+                      <button 
+                        (click)="updateStatus(order.id, 'READY_FOR_PICKUP')"
+                        class="px-4 py-2 bg-emerald-500 text-white text-xs font-bold rounded-xl hover:bg-emerald-600 transition-colors"
+                      >
+                        Gotowa na odbiór
+                      </button>
+                    }
+                  }
+                  @if (order.status === 'SHIPPED' || order.status === 'READY_FOR_PICKUP') {
+                    <button 
+                      (click)="updateStatus(order.id, 'COMPLETED')"
+                      [disabled]="order.deliveryMethod === 'SHIPPING' && !order.trackingNumber"
+                      class="px-4 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-bold rounded-xl hover:opacity-90 transition-colors disabled:opacity-50"
+                    >
+                      Zakończ zamówienie
+                    </button>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+          @if (sellerOrders().length === 0) {
+            <div class="py-12 text-center bg-white dark:bg-zinc-800 rounded-3xl border border-zinc-100 dark:border-zinc-700 border-dashed">
+              <mat-icon class="text-zinc-300 dark:text-zinc-600 mb-2" style="font-size: 48px; width: 48px; height: 48px;">storefront</mat-icon>
+              <p class="text-zinc-500 dark:text-zinc-400 italic">Nikt jeszcze nic od Ciebie nie kupił.</p>
+            </div>
+          }
+        </div>
+      }
+    </main>
+
+  </div>
+</div>
+
+<!-- Modals -->
+@if (displayUser(); as user) {
+  <app-edit-profile-modal
+    [isOpen]="isEditModalOpen"
+    (isOpenChange)="isEditModalOpen = $event"
+    [user]="user"
+  ></app-edit-profile-modal>
+}
+
+<app-listing-modal
+  [isOpen]="isListingModalOpen"
+  (isOpenChange)="isListingModalOpen = $event"
+  [listing]="editingListing"
+></app-listing-modal>
+
+<!-- Delete Confirmation Modal -->
+@if (listingToDelete !== null) {
+  <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm animate-fade-in">
+    <div class="bg-white dark:bg-zinc-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl animate-scale-in border border-zinc-100 dark:border-zinc-700">
+      <h3 class="text-xl font-bold text-zinc-900 dark:text-white mb-2">Usuń ogłoszenie</h3>
+      <p class="text-zinc-500 dark:text-zinc-400 mb-6">Czy na pewno chcesz trwale usunąć to ogłoszenie? Tej operacji nie można cofnąć.</p>
+      <div class="flex gap-3">
+        <button (click)="confirmDelete()" class="flex-1 px-4 py-3 bg-red-500 text-white font-bold rounded-2xl hover:bg-red-600 transition-colors">Usuń</button>
+        <button (click)="listingToDelete = null" class="flex-1 px-4 py-3 bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold rounded-2xl hover:bg-zinc-200 dark:hover:bg-zinc-600 transition-colors">Anuluj</button>
       </div>
     </div>
-  }
-</div>
+  </div>
+}
