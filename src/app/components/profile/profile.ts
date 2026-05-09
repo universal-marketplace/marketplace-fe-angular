@@ -1,7 +1,9 @@
 import {ChangeDetectorRef, Component, computed, inject, OnInit, signal} from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
-import {State} from '../../services/state';
-import {Listing, User} from '../../models';
+import {ListingService} from '../../features/marketplace/services/listing.service';
+import {AuthService} from '../../features/auth/services/auth.service';
+import {OrderService} from '../../core/services/order.service';
+import {Listing, User, OrderStatus} from '../../models';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {ListingCard} from '../listing-card/listing-card';
@@ -17,28 +19,32 @@ import {catchError, of} from 'rxjs';
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })
-export class Profile implements OnInit { 
+export class Profile implements OnInit {
   route = inject(ActivatedRoute);
-  state = inject(State);
+  listingService = inject(ListingService);
+  authService = inject(AuthService);
+  orderService = inject(OrderService);
   cdr = inject(ChangeDetectorRef);
 
-  // Sygnał przechowujący dane przeglądanego profilu
   profileUser = signal<User | undefined>(undefined);
-  
-  // Zawsze wybieramy najświeższe dane: jeśli to nasz profil, bierzemy z currentUser()
+  currentProfileId = signal<number | null>(null);
+  activeTab = signal<'listings' | 'reviews' | 'purchases' | 'sales'>('listings');
+
   displayUser = computed(() => {
-    const current = this.state.currentUser();
+    const current = this.authService.currentUser();
     const profile = this.profileUser();
-    if (current && profile && current.id === profile.id) {
-      return current; // Tutaj są dane po edycji
+    const id = this.currentProfileId();
+
+    if (current && id === current.id) {
+      return current;
     }
     return profile;
   });
 
   isOwnProfile = computed(() => {
-    const current = this.state.currentUser();
-    const profile = this.profileUser();
-    return !!(current && profile && current.id === profile.id);
+    const current = this.authService.currentUser();
+    const id = this.currentProfileId();
+    return !!(current && id === current.id);
   });
 
   isEditModalOpen = false;
@@ -55,28 +61,40 @@ export class Profile implements OnInit {
   };
   hoverRating = 0;
 
-  listings = computed(() => this.state.getUserListings(0));
-  reviews = computed(() => this.state.getUserReviews(0));
+  listings = computed(() => this.listingService.activeProfileListings());
+  reviews = computed(() => this.listingService.activeProfileReviews());
+  buyerOrders = computed(() => this.orderService.buyerOrders());
+  sellerOrders = computed(() => this.orderService.sellerOrders());
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
       const idParam = params.get('id');
       if (idParam) {
         const id = Number(idParam);
+        this.currentProfileId.set(id);
+        
+        // Reset state for new profile
         this.profileUser.set(undefined);
-        this.state.loadProfileData(id);
+        this.listingService.activeProfileListings.set([]);
+        this.listingService.activeProfileReviews.set([]);
+        this.orderService.buyerOrders.set([]);
+        this.orderService.sellerOrders.set([]);
 
-        this.state.fetchUser(id).pipe(
+        this.listingService.fetchUserListings(id);
+        this.listingService.fetchUserReviews(id);
+
+        this.authService.getUserById(id).pipe(
           catchError(err => {
             console.error('Błąd podczas pobierania użytkownika:', err);
-            return of(undefined);
+            return of(null);
           })
         ).subscribe(u => {
           if (u) {
-            if (!u.avatarUrl) {
-              u.avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.name}`;
-            }
             this.profileUser.set(u);
+            if (this.isOwnProfile()) {
+               this.orderService.loadBuyerOrders();
+               this.orderService.loadSellerOrders();
+            }
           }
           this.cdr.detectChanges();
         });
@@ -100,14 +118,14 @@ export class Profile implements OnInit {
 
   confirmDelete() {
     if (this.listingToDelete) {
-      this.state.deleteListing(this.listingToDelete);
+      this.listingService.deleteListing(this.listingToDelete).subscribe();
       this.listingToDelete = null;
     }
   }
 
   submitReply(reviewId: number) {
     if (this.replyText.trim()) {
-      this.state.addReviewReply(reviewId, this.replyText.trim());
+      this.listingService.addReviewReply(reviewId, this.replyText.trim()).subscribe();
       this.replyingTo = null;
       this.replyText = '';
     }
@@ -120,8 +138,14 @@ export class Profile implements OnInit {
     }
     const user = this.displayUser();
     if (user && this.newReview.comment.trim()) {
-      this.state.addReview(user.id, this.newReview.rating, this.newReview.comment.trim());
+      this.listingService.addReview(user.id, this.newReview.rating, this.newReview.comment.trim()).subscribe();
       this.newReview = { rating: 5, comment: '' };
     }
   }
+
+  updateStatus(orderId: number, status: OrderStatus, trackingNumber?: string) {
+    this.orderService.updateOrderStatus(orderId, status, trackingNumber).subscribe();
+  }
+
+  trackingInputs: Record<number, string> = {};
 }

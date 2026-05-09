@@ -1,6 +1,6 @@
 import {Component, EventEmitter, inject, Input, Output} from '@angular/core';
 import {Listing} from '../../models';
-import {State} from '../../services/state';
+import {ListingService} from '../../features/marketplace/services/listing.service';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {MatIconModule} from '@angular/material/icon';
@@ -21,6 +21,7 @@ export class ListingModal {
       this.formData = {
         title: value.title,
         price: value.price,
+        unitAmount: value.unitAmount || 1,
         imageUrl: value.imageUrl,
         description: value.description,
         type: value.type || 'ITEM'
@@ -32,6 +33,7 @@ export class ListingModal {
       this.formData = {
         title: '',
         price: 0,
+        unitAmount: 1,
         imageUrl: 'https://picsum.photos/seed/new/600/400',
         description: '',
         type: 'ITEM'
@@ -42,7 +44,7 @@ export class ListingModal {
   }
   @Output() isOpenChange = new EventEmitter<boolean>();
 
-  state = inject(State);
+  listingService = inject(ListingService);
 
   isEditing = false;
   listingId: number | null = null;
@@ -52,6 +54,7 @@ export class ListingModal {
   formData = {
     title: '',
     price: 0,
+    unitAmount: 1,
     imageUrl: '',
     description: '',
     type: 'ITEM' as 'ITEM' | 'SERVICE'
@@ -63,7 +66,11 @@ export class ListingModal {
   }
 
   isFormValid(): boolean {
-    return !!(this.formData.title && this.formData.price > 0 && this.formData.imageUrl && this.formData.description && this.tagsString);
+    const isBaseValid = !!(this.formData.title && this.formData.price > 0 && this.formData.imageUrl && this.formData.description && this.tagsString);
+    if (this.formData.type === 'ITEM') {
+      return isBaseValid && this.formData.unitAmount > 0;
+    }
+    return isBaseValid;
   }
 
   onSubmit() {
@@ -82,9 +89,9 @@ export class ListingModal {
     };
 
     if (this.isEditing && this.listingId) {
-      this.state.updateListing(this.listingId, data);
+      this.listingService.updateListing(this.listingId, data).subscribe();
     } else {
-      this.state.addListing(data);
+      this.listingService.addListing(data).subscribe();
     }
 
     this.close();

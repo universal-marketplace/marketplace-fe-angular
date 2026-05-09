@@ -48,6 +48,7 @@ export interface Listing {
   title: string;
   description: string;
   price: number;
+  unitAmount?: number;
   type: 'ITEM' | 'SERVICE';
   tags: string[];
   rating: number;
@@ -74,4 +75,39 @@ export interface CartDto {
 export interface AddToCartRequest {
   listingId: number;
   quantity: number;
+  bookingDate?: string;
+}
+
+export type DeliveryMethod = 'SHIPPING' | 'PICKUP';
+export type OrderStatus = 'PENDING' | 'SHIPPED' | 'READY_FOR_PICKUP' | 'COMPLETED' | 'CANCELLED';
+
+export interface CheckoutRequest {
+  deliveryMethod?: DeliveryMethod;
+}
+
+export interface OrderItemDto {
+  listingId: number;
+  title: string;
+  type: 'ITEM' | 'SERVICE';
+  quantity: number;
+  unitPrice: number;
+  bookingDate?: string;
+}
+
+export interface OrderResponse {
+  id: number;
+  totalPrice: number;
+  deliveryMethod?: DeliveryMethod;
+  status: OrderStatus;
+  trackingNumber?: string;
+  createdAt: string;
+  items: OrderItemDto[];
+}
+
+export interface NotificationDto {
+  id: number;
+  message: string;
+  orderId?: number;
+  isRead: boolean;
+  createdAt: string;
 }

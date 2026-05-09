@@ -18,12 +18,14 @@
           "builder": "@angular/build:application",
           "options": {
             "browser": "src/main.ts",
+            "outputPath": "dist/universal-marketplace-fe",
             "tsConfig": "tsconfig.app.json",
             "assets": [
               {
                 "glob": "**/*",
                 "input": "public"
-              }
+              },
+              "src/staticwebapp.config.json"
             ],
             "styles": ["src/material-theme.scss", "src/styles.css"]
           },

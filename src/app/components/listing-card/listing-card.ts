@@ -1,6 +1,6 @@
 import {Component, inject, Input} from '@angular/core';
 import {Listing} from '../../models';
-import {State} from '../../services/state';
+import {ListingService} from '../../features/marketplace/services/listing.service';
 import {CommonModule} from '@angular/common';
 import {RouterLink} from '@angular/router';
 import {MatIconModule} from '@angular/material/icon';
@@ -16,9 +16,9 @@ export class ListingCard {
   @Input({ required: true }) listing!: Listing;
   @Input() viewMode: 'grid' | 'list' = 'grid';
 
-  state = inject(State);
+  listingService = inject(ListingService);
 
   openDetails() {
-    this.state.openListingDetails(this.listing);
+    this.listingService.openListingDetails(this.listing);
   }
 }

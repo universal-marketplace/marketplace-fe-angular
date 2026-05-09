@@ -7,9 +7,10 @@
   <app-auth-modal></app-auth-modal>
   <app-listing-details-modal></app-listing-details-modal>
   <app-account-settings-modal
-    [isOpen]="state.isAccountSettingsModalOpen()"
-    (isOpenChange)="state.isAccountSettingsModalOpen.set($event)"
-    [user]="state.currentUser()"
+    [isOpen]="ui.isAccountSettingsModalOpen()"
+    (isOpenChange)="ui.isAccountSettingsModalOpen.set($event)"
+    [user]="auth.currentUser()"
   ></app-account-settings-modal>
   <app-cart-modal></app-cart-modal>
+  <app-toast></app-toast>
 </div>
