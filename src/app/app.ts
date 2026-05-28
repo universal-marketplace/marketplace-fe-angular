@@ -7,6 +7,7 @@ import {AuthModal} from './components/auth-modal/auth-modal';
 import {ListingDetailsModal} from './components/listing-details-modal/listing-details-modal';
 import {AccountSettingsModal} from './components/account-settings-modal/account-settings-modal';
 import {CartModal} from './components/cart-modal/cart-modal';
+import {ListingModal} from './components/listing-modal/listing-modal';
 import {ToastComponent} from './components/toast/toast.component';
 import { MatIconModule } from '@angular/material/icon';
 import {isPlatformBrowser} from '@angular/common';
@@ -14,7 +15,7 @@ import {isPlatformBrowser} from '@angular/common';
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-root',
-  imports: [RouterOutlet, Navbar, AuthModal, ListingDetailsModal, AccountSettingsModal, CartModal, ToastComponent],
+  imports: [RouterOutlet, Navbar, AuthModal, ListingDetailsModal, AccountSettingsModal, CartModal, ToastComponent, ListingModal],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

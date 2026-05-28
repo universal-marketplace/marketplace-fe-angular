@@ -1,29 +1,32 @@
 import {ChangeDetectorRef, Component, computed, inject, OnInit, signal} from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
 import {ListingService} from '../../features/marketplace/services/listing.service';
+import {ProfileService} from '../../features/profile/services/profile.service';
 import {AuthService} from '../../features/auth/services/auth.service';
 import {OrderService} from '../../core/services/order.service';
+import {UIService} from '../../core/services/ui.service';
 import {Listing, User, OrderStatus} from '../../models';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {ListingCard} from '../listing-card/listing-card';
 import {EditProfileModal} from '../edit-profile-modal/edit-profile-modal';
-import {ListingModal} from '../listing-modal/listing-modal';
 import { MatIconModule } from '@angular/material/icon';
 import {catchError, of} from 'rxjs';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, MatIconModule, FormsModule, ListingCard, EditProfileModal, ListingModal],
+  imports: [CommonModule, MatIconModule, FormsModule, ListingCard, EditProfileModal],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })
 export class Profile implements OnInit {
   route = inject(ActivatedRoute);
   listingService = inject(ListingService);
+  profileService = inject(ProfileService);
   authService = inject(AuthService);
   orderService = inject(OrderService);
+  ui = inject(UIService);
   cdr = inject(ChangeDetectorRef);
 
   profileUser = signal<User | undefined>(undefined);
@@ -48,8 +51,6 @@ export class Profile implements OnInit {
   });
 
   isEditModalOpen = false;
-  isListingModalOpen = false;
-  editingListing: Listing | null = null;
   listingToDelete: number | null = null;
 
   replyingTo: number | null = null;
@@ -61,8 +62,8 @@ export class Profile implements OnInit {
   };
   hoverRating = 0;
 
-  listings = computed(() => this.listingService.activeProfileListings());
-  reviews = computed(() => this.listingService.activeProfileReviews());
+  listings = computed(() => this.profileService.activeProfileListings());
+  reviews = computed(() => this.profileService.activeProfileReviews());
   buyerOrders = computed(() => this.orderService.buyerOrders());
   sellerOrders = computed(() => this.orderService.sellerOrders());
 
@@ -75,13 +76,12 @@ export class Profile implements OnInit {
         
         // Reset state for new profile
         this.profileUser.set(undefined);
-        this.listingService.activeProfileListings.set([]);
-        this.listingService.activeProfileReviews.set([]);
+        this.profileService.resetProfileData();
         this.orderService.buyerOrders.set([]);
         this.orderService.sellerOrders.set([]);
 
-        this.listingService.fetchUserListings(id);
-        this.listingService.fetchUserReviews(id);
+        this.profileService.fetchUserListings(id);
+        this.profileService.fetchUserReviews(id);
 
         this.authService.getUserById(id).pipe(
           catchError(err => {
@@ -103,13 +103,11 @@ export class Profile implements OnInit {
   }
 
   openAddListingModal() {
-    this.editingListing = null;
-    this.isListingModalOpen = true;
+    this.ui.openListingModal();
   }
 
   openEditListingModal(listing: Listing) {
-    this.editingListing = listing;
-    this.isListingModalOpen = true;
+    this.ui.openListingModal(listing);
   }
 
   deleteListing(id: number) {
@@ -125,7 +123,7 @@ export class Profile implements OnInit {
 
   submitReply(reviewId: number) {
     if (this.replyText.trim()) {
-      this.listingService.addReviewReply(reviewId, this.replyText.trim()).subscribe();
+      this.profileService.addReviewReply(reviewId, this.replyText.trim()).subscribe();
       this.replyingTo = null;
       this.replyText = '';
     }
@@ -138,7 +136,7 @@ export class Profile implements OnInit {
     }
     const user = this.displayUser();
     if (user && this.newReview.comment.trim()) {
-      this.listingService.addReview(user.id, this.newReview.rating, this.newReview.comment.trim()).subscribe();
+      this.profileService.addReview(user.id, this.newReview.rating, this.newReview.comment.trim()).subscribe();
       this.newReview = { rating: 5, comment: '' };
     }
   }
