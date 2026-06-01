@@ -130,15 +130,24 @@
           @if (!isOwnProfile() && authService.currentUser()) {
             <div class="bg-white dark:bg-zinc-800 p-6 rounded-3xl shadow-sm border border-orange-100 dark:border-orange-900/30">
               <h3 class="font-bold text-zinc-900 dark:text-white mb-4">Wystaw opinię</h3>
-              <div class="flex items-center gap-2 mb-4">
+              <div class="rating-container mb-4">
                 @for (star of [1,2,3,4,5]; track star) {
                   <button 
+                    type="button"
                     (click)="newReview.rating = star"
                     (mouseenter)="hoverRating = star"
                     (mouseleave)="hoverRating = 0"
-                    class="focus:outline-none transition-transform hover:scale-110"
+                    class="star-btn"
                   >
-                    <mat-icon [class.text-orange-500]="(hoverRating || newReview.rating) >= star" class="text-zinc-200 dark:text-zinc-700">star</mat-icon>
+                    <mat-icon 
+                      [class.star-active]="(hoverRating > 0 ? hoverRating : newReview.rating) >= star"
+                      [class.star-hovered]="hoverRating >= star && hoverRating > 0"
+                      [class.star-inactive]="(hoverRating > 0 ? hoverRating : newReview.rating) < star"
+                      [class.star-pop]="newReview.rating === star"
+                      class="star-icon"
+                    >
+                      {{ (hoverRating > 0 ? hoverRating : newReview.rating) >= star ? 'star' : 'star_border' }}
+                    </mat-icon>
                   </button>
                 }
               </div>

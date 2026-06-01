@@ -22,6 +22,7 @@ export class ListingModal {
         title: value.title,
         price: value.price,
         unitAmount: value.unitAmount || 1,
+        priceUnit: value.priceUnit || 'PER_SERVICE',
         imageUrl: value.imageUrl,
         description: value.description,
         type: value.type || 'ITEM'
@@ -34,6 +35,7 @@ export class ListingModal {
         title: '',
         price: 0,
         unitAmount: 1,
+        priceUnit: 'PER_SERVICE',
         imageUrl: 'https://picsum.photos/seed/new/600/400',
         description: '',
         type: 'ITEM'
@@ -55,6 +57,7 @@ export class ListingModal {
     title: '',
     price: 0,
     unitAmount: 1,
+    priceUnit: 'PER_SERVICE' as 'PER_HOUR' | 'PER_M2' | 'PER_SERVICE' | undefined,
     imageUrl: '',
     description: '',
     type: 'ITEM' as 'ITEM' | 'SERVICE'
@@ -69,6 +72,9 @@ export class ListingModal {
     const isBaseValid = !!(this.formData.title && this.formData.price > 0 && this.formData.imageUrl && this.formData.description && this.tagsString);
     if (this.formData.type === 'ITEM') {
       return isBaseValid && this.formData.unitAmount > 0;
+    }
+    if (this.formData.type === 'SERVICE') {
+      return isBaseValid && !!this.formData.priceUnit;
     }
     return isBaseValid;
   }
@@ -85,6 +91,7 @@ export class ListingModal {
     const tags = this.tagsString.split(',').map(t => t.trim()).filter(t => t.length > 0);
     const data = {
       ...this.formData,
+      priceUnit: this.formData.type === 'SERVICE' ? this.formData.priceUnit : undefined,
       tags
     };
 
