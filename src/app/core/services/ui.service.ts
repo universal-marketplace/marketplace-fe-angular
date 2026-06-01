@@ -9,6 +9,8 @@ export class UIService {
   isAuthModalOpen = signal<boolean>(false);
   isAccountSettingsModalOpen = signal<boolean>(false);
   isCartModalOpen = signal<boolean>(false);
+  isListingModalOpen = signal<boolean>(false);
+  listingModalData = signal<any>(null);
 
   toggleTheme() {
     this.isDarkMode.update(v => !v);
@@ -26,4 +28,8 @@ export class UIService {
   closeAccountSettingsModal() { this.isAccountSettingsModalOpen.set(false); }
   openCartModal() { this.isCartModalOpen.set(true); }
   closeCartModal() { this.isCartModalOpen.set(false); }
+  openListingModal(listing: any = null) {
+    this.listingModalData.set(listing);
+    this.isListingModalOpen.set(true);
+  }
 }

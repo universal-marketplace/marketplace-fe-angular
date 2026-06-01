@@ -48,6 +48,15 @@
                 <div class="relative flex-1 min-w-[120px]">
                   <input type="number" min="0" step="0.01" [(ngModel)]="formData.price" name="price" required placeholder="Kwota" class="bg-zinc-50 border border-zinc-300 text-zinc-900 text-sm rounded-xl focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5 dark:bg-zinc-700 dark:border-zinc-600 dark:placeholder-zinc-400 dark:text-white dark:focus:ring-orange-500 dark:focus:border-orange-500">
                 </div>
+                @if (formData.type === 'SERVICE') {
+                  <div class="relative flex-1 min-w-[180px]">
+                    <select [(ngModel)]="formData.priceUnit" name="priceUnit" required class="bg-zinc-50 border border-zinc-300 text-zinc-900 text-sm rounded-xl focus:ring-orange-500 focus:border-orange-500 block w-full p-2.5 dark:bg-zinc-700 dark:border-zinc-600 dark:placeholder-zinc-400 dark:text-white dark:focus:ring-orange-500 dark:focus:border-orange-500">
+                      <option value="PER_SERVICE">za całą usługę</option>
+                      <option value="PER_HOUR">za godzinę</option>
+                      <option value="PER_M2">za m²</option>
+                    </select>
+                  </div>
+                }
               </div>
               @if (priceError) {
                 <p class="mt-1 text-sm text-red-500">{{ priceError }}</p>

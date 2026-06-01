@@ -13,4 +13,9 @@
   ></app-account-settings-modal>
   <app-cart-modal></app-cart-modal>
   <app-toast></app-toast>
+  <app-listing-modal
+    [isOpen]="ui.isListingModalOpen()"
+    (isOpenChange)="ui.isListingModalOpen.set($event)"
+    [listing]="ui.listingModalData()"
+  ></app-listing-modal>
 </div>

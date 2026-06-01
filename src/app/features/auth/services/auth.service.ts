@@ -49,8 +49,7 @@ export class AuthService {
         if (u && !u.avatarUrl) {
           u.avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.name}`;
         }
-      }),
-      catchError(() => of(null))
+      })
     );
   }
 
@@ -61,21 +60,21 @@ export class AuthService {
           localStorage.setItem('token', res.token);
           this.fetchCurrentUser();
         }
-      }),
-      catchError(() => of(null))
+      })
     );
+  }
+
+  verify(email: string, code: string) {
+    return this.http.post(`${this.apiUrl}/auth/verify`, { email, code }, { responseType: 'text' });
+  }
+
+  resendVerification(email: string) {
+    return this.http.post(`${this.apiUrl}/auth/resend-verification`, { email }, { responseType: 'text' });
   }
 
   register(name: string, email: string, password?: string) {
     const payload = { name, email, password, passwordRepeated: password };
-    return this.http.post<User>(`${this.apiUrl}/auth/register`, payload).pipe(
-      tap(user => {
-        if (user) {
-          this.loginWithCredentials(email, password).subscribe();
-        }
-      }),
-      catchError(() => of(null))
-    );
+    return this.http.post<User>(`${this.apiUrl}/auth/register`, payload);
   }
 
   logout() {

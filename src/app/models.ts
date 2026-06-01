@@ -49,6 +49,7 @@ export interface Listing {
   description: string;
   price: number;
   unitAmount?: number;
+  priceUnit?: 'PER_HOUR' | 'PER_M2' | 'PER_SERVICE';
   type: 'ITEM' | 'SERVICE';
   tags: string[];
   rating: number;

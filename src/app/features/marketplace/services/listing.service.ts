@@ -1,8 +1,8 @@
 import { Injectable, signal, computed, inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { isPlatformBrowser } from '@angular/common';
-import { catchError, of, map, tap, Observable } from 'rxjs';
-import { Listing, PageResponse, Review } from '../../../models';
+import { catchError, of, map, tap } from 'rxjs';
+import { Listing, PageResponse } from '../../../models';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({
@@ -19,9 +19,6 @@ export class ListingService {
   selectedTags = signal<string[]>([]);
   listingTypeFilter = signal<'ALL' | 'ITEM' | 'SERVICE'>('ALL');
 
-  activeProfileListings = signal<Listing[]>([]);
-  activeProfileReviews = signal<Review[]>([]);
-
   constructor() {
     this.fetchListings();
   }
@@ -35,20 +32,6 @@ export class ListingService {
     ).subscribe(data => {
       this.listings.set(data);
     });
-  }
-
-  fetchUserListings(userId: number) {
-    this.http.get<PageResponse<Listing>>(`${this.apiUrl}/users/${userId}/listings`).pipe(
-      map(res => res.content),
-      catchError(() => of([]))
-    ).subscribe(data => this.activeProfileListings.set(data));
-  }
-
-  fetchUserReviews(userId: number) {
-    this.http.get<PageResponse<Review>>(`${this.apiUrl}/users/${userId}/reviews`).pipe(
-      map(res => res.content),
-      catchError(() => of([]))
-    ).subscribe(data => this.activeProfileReviews.set(data));
   }
 
   addListing(listing: any) {
@@ -77,27 +60,6 @@ export class ListingService {
     return this.http.delete(`${this.apiUrl}/listings/${id}`).pipe(
       tap(() => {
         this.listings.update(l => l.filter(item => item.id !== id));
-      })
-    );
-  }
-
-  addReview(targetId: number, rating: number, comment: string) {
-    const payload = { targetId, rating, comment };
-    return this.http.post<Review>(`${this.apiUrl}/reviews`, payload).pipe(
-      tap(newReview => {
-        if (newReview) {
-          this.activeProfileReviews.update(r => [newReview, ...r]);
-        }
-      })
-    );
-  }
-
-  addReviewReply(reviewId: number, comment: string) {
-    return this.http.post<Review>(`${this.apiUrl}/reviews/${reviewId}/reply`, { reply: comment }).pipe(
-      tap(updatedReview => {
-        if (updatedReview) {
-          this.activeProfileReviews.update(r => r.map(item => item.id === reviewId ? updatedReview : item));
-        }
       })
     );
   }

@@ -1,0 +1,82 @@
+/* Star rating container and buttons */
+.rating-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.star-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border-radius: 50%;
+}
+
+.star-btn:focus-visible {
+  outline: 2px solid #facc15;
+}
+
+/* Hover/active scale effects */
+.star-btn:hover {
+  transform: scale(1.25);
+}
+
+.star-btn:active {
+  transform: scale(0.9);
+}
+
+/* Star icon styling */
+.star-icon {
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+  transition: color 0.25s ease, filter 0.25s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: inline-block;
+  line-height: 1;
+}
+
+/* Inactive star (empty, muted color) */
+.star-inactive {
+  color: #d1d5db; /* gray-300 */
+}
+
+:host-context(.dark) .star-inactive,
+.dark .star-inactive {
+  color: #4b5563; /* gray-600 */
+}
+
+/* Active star (gold yellow) */
+.star-active {
+  color: #facc15; /* yellow-400 */
+  filter: drop-shadow(0 0 4px rgba(250, 204, 21, 0.5));
+}
+
+/* Specific state: when the icon is currently hovered or part of a hovered group */
+.star-hovered {
+  color: #fbbf24; /* amber-400 */
+  filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.8));
+  transform: scale(1.1);
+}
+
+/* Add a subtle animation when the star rating is clicked */
+@keyframes starPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.35);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.star-pop {
+  animation: starPulse 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
