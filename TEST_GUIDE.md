@@ -3,7 +3,7 @@
 Ten dokument zawiera instrukcję krok po kroku, jak przetestować pełną funkcjonalność aplikacji Universal Marketplace (Frontend + Backend).
 
 ## 1. Wymagania wstępne
-- **Backend (Spring Boot)**: Uruchomiony na `https://webappbuc.azurewebsites.net` (Azure) lub `http://localhost:8081` (lokalnie)
+- **Backend (Spring Boot)**: Uruchomiony na `https://universal-marketplace-be.azurewebsites.net` (Azure) lub `http://localhost:8081` (lokalnie)
 - **Frontend (Angular)**: Uruchomiony na `http://localhost:4200`
 - **Baza danych**: Czysta lub z dostępem do zapisu.
 

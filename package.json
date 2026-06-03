@@ -2,6 +2,9 @@
   "name": "universal-marketplace-fe",
   "version": "0.0.0",
   "scripts": {
+    "prestart": "node set-env.js",
+    "prebuild": "node set-env.js",
+    "pretest": "node set-env.js",
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
