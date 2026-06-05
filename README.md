@@ -43,7 +43,7 @@ Aby uruchomić projekt lokalnie, wykonaj poniższe kroki. Poniższa instrukcja d
 ### Kroki uruchomienia
 1. Sklonuj repozytorium:
    ```bash
-   git clone <adres-repozytorium>
+   git clone https://github.com/universal-marketplace/marketplace-fe-angular.git
    cd universal-marketplace-fe
    ```
 
